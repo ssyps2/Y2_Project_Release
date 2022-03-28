@@ -153,12 +153,12 @@ int midPointCapture(vehicleControl_t *robot){
     char location[10];
 
     const int sample_height = tracking_frame_height * 0.5;  //sampling height of the image
-    int sample_win[2]; //horizontal sampling windows, 0: previous, 1: now
+    int sample_win[3]; //horizontal sampling windows, 0: previous, 1: now
     int sample_sum = 0, sample_cnt = 0;
     int edge_first, edge_last;  //edge position
     int mid_point = 0, width = 0;  //middle position and width of the black line
 
-    uchar scanMode = 0;
+    uchar scanMode = 1;
 
     //process each frame of the video
     robot->webcam.read(imageTrack);     //read the image of one frame
@@ -226,7 +226,8 @@ int midPointCapture(vehicleControl_t *robot){
                 sample_sum += pos;
                 sample_cnt++;
             }
-            if (sample_cnt < 5){
+
+            if (sample_cnt == 0){
                 mid_point = 0;
                 width = 0;
             }
@@ -239,30 +240,46 @@ int midPointCapture(vehicleControl_t *robot){
 
     std::cout << "width: " << width << std::endl;
 
-    if (width >= 60 && gray_image.at<uchar>(Point(tracking_frame_width-1, sample_height)) == 0){
-        last_tx = tx;
-        if (scanMode == 0){
+    if (scanMode == 0){
+        if (width >= 60 && gray_image.at<uchar>(Point(tracking_frame_width-1, sample_height)) == 0){
+            last_tx = tx;
             tx = edge_last;
         }
-        else if (scanMode == 1){
-            tx = (int)(mid_point + width/2);
-        }
-    }
-    else if (width >= 60 && gray_image.at<uchar>(Point(0, sample_height)) == 0){
-        last_tx = tx;
-        if (scanMode == 0){
+        else if (width >= 60 && gray_image.at<uchar>(Point(0, sample_height)) == 0){
+            last_tx = tx;
             tx = edge_first;
         }
-        else if (scanMode == 1){
-            tx = (int)(mid_point - width/2);
+        else if (width > 15 && width < 60){
+            last_tx = tx;
+            tx = mid_point;
+        }
+        else if (width == 0){
+            tx = last_tx;
         }
     }
-    else if (width > 15 && width < 60){
-        last_tx = tx;
-        tx = mid_point;
-    }
-    else if (width == 0){
-        tx = last_tx;
+    else if (scanMode == 1){
+        if (width >= 60 && gray_image.at<uchar>(Point(tracking_frame_width-1, sample_height)) > 240){
+            last_tx = tx;
+            tx = (int)(mid_point + width/2);
+        }
+        else if (width >= 60 && gray_image.at<uchar>(Point(0, sample_height)) > 240){
+            last_tx = tx;
+            tx = (int)(mid_point - width/2);
+        }
+        else if (width > 15 && width < 60){
+            last_tx = tx;
+            tx = mid_point;
+        }
+        else if (width == 0){
+            tx = last_tx;
+
+            /* if (mid_point - last_tx > 100){
+                tx = 0;
+            }
+            else if (mid_point - last_tx < 100){
+                tx = tracking_frame_width-1;
+            } */
+        }
     }
 
     ty = sample_height;

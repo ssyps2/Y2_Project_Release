@@ -88,6 +88,7 @@ void trackLine(vehicleControl_t *robot){
     if (robot->modeFlag == TRACK){
         serialPrintf(robot->serial, "#Ba%c%c%c%c %03d %03d %03d %03d", Motor1Direction, Motor2Direction, Motor3Direction, Motor4Direction,
                                                                     rightMotorSpeed, leftMotorSpeed, leftMotorSpeed, rightMotorSpeed);
+        std::cout << "OK" << std::endl;
     }
     else if (robot->modeFlag == DETECTED){
         //stop the vehicle
