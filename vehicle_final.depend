@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1648447803 source:/home/pi/opencv_samples/vehicle_final/main.cpp
+1648460746 source:/home/pi/opencv_samples/vehicle_final/main.cpp
 	"main.hpp"
 	"visualScan.hpp"
 	"lineTrack.hpp"
@@ -739,7 +739,7 @@
 	<vector>
 	"opencv2/imgproc.hpp"
 
-1648456324 source:/home/pi/opencv_samples/vehicle_final/lineTrack.cpp
+1648460186 source:/home/pi/opencv_samples/vehicle_final/lineTrack.cpp
 	<stdlib.h>
 	"imgproc.h"
 	"wiringSerial.h"
@@ -755,7 +755,7 @@
 1648448501 /home/pi/opencv_samples/vehicle_final/lineTrack.hpp
 	"main.hpp"
 
-1648438997 /home/pi/opencv_samples/vehicle_final/main.hpp
+1648475645 /home/pi/opencv_samples/vehicle_final/main.hpp
 	<iostream>
 	<opencv2/opencv.hpp>
 	<opencv2/imgproc.hpp>
@@ -766,7 +766,7 @@
 1648447796 /home/pi/opencv_samples/vehicle_final/visualScan.hpp
 	"main.hpp"
 
-1648457627 source:/home/pi/opencv_samples/vehicle_final/visualScan.cpp
+1648484111 source:/home/pi/opencv_samples/vehicle_final/visualScan.cpp
 	<cstdlib>
 	"visualScan.hpp"
 

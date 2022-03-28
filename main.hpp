@@ -31,6 +31,16 @@ typedef enum{
 }modeTypedef;
 
 typedef struct{
+    uchar red;
+    uchar green;
+    uchar blue;
+
+    uchar hue;
+    uchar saturate;
+    uchar value;
+}colorSpaceTypedef;
+
+typedef struct{
     int serial;
     int lcd;
     int servo;
@@ -38,6 +48,7 @@ typedef struct{
     PIDTypeDef pid;
     modeTypedef lastModeFlag;
     modeTypedef modeFlag;
+    colorSpaceTypedef imageColor;
 }vehicleControl_t;
 
 

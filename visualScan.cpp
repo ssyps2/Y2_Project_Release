@@ -12,8 +12,12 @@ static void on_low_V_thresh_trackbar(int, void *);
 static void on_high_V_thresh_trackbar(int, void *);
 static void resizeCamera(vehicleControl_t *robot, int width, int height);
 static void modeCheck(vehicleControl_t *robot);
+static void RGBCallback(int event, int x, int y, int, void *param);
+static void HSVCallback(int event, int x, int y, int, void *param);
 
-int matching_frame_width = 1920, matching_frame_height = 1080;
+extern vehicleControl_t robot;
+
+int matching_frame_width = 480, matching_frame_height = 360;
 int tracking_frame_width = 480, tracking_frame_height = 272;
 string comparePath = "/home/pi/Pictures/Template/CountShape2.png";
 
@@ -53,40 +57,36 @@ void webcamInit(vehicleControl_t *robot){
 		exit(-2);
 	}
 
-    resizeCamera(robot, tracking_frame_width, tracking_frame_height);
-    //resizeCamera(matching_frame_width, matching_frame_height);
+    //resizeCamera(robot, tracking_frame_width, tracking_frame_height);
+    resizeCamera(robot, matching_frame_width, matching_frame_height);
 
     robot->modeFlag = TRACK;
 }
 
 float visualMatch(vehicleControl_t *robot) {
+    const string originWindow = "origin";
+
     robot->webcam.read(imageMatch);
 
-    /*char photo = (char) waitKey(30);
+    char photo = (char) waitKey(30);
     if (photo == 'c') {
         imwrite("/home/pi/Pictures/record.png", imageMatch);
         puts("saved!\n");
-    }*/
+    }
 
     imageCompareInput = imread(comparePath);
     resize(imageCompareInput, imageCompare, Size(matching_frame_width, matching_frame_height));
 
-    //trackBarHsvDetection();
+    //trackBarHsvDetection(robot);
 
     kernelErode = getStructuringElement(MORPH_RECT, Size(8, 8));
     kernelDilate = getStructuringElement(MORPH_RECT, Size(3, 3));
 
     cvtColor(imageMatch, imageHSV, COLOR_BGR2HSV);
-    cvtColor(imageHSV, imageHSV, COLOR_BGR2GRAY);
-    threshold(imageHSV, imageHSV, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
-    inRange(imageHSV, Scalar(0, 0, 0), Scalar(156, 255, 255), imageMask);
-    //threshold(imageMask, imageMask, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
+    inRange(imageHSV, Scalar(157, 157, 114), Scalar(180, 255, 255), imageMask);
 
     cvtColor(imageCompare, imgHSVCompare, COLOR_BGR2HSV);
-    cvtColor(imgHSVCompare, imgHSVCompare, COLOR_BGR2GRAY);
-    threshold(imgHSVCompare, imgHSVCompare, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
-    inRange(imgHSVCompare, Scalar(0, 0, 0), Scalar(143, 255, 255), imageMaskCompare);
-    //threshold(imageMaskCompare, imageMaskCompare, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
+    inRange(imgHSVCompare, Scalar(64, 0, 0), Scalar(180, 255, 255), imageMaskCompare);
 
     //erode-dilate algorithm
     erode(imageMask, imageErode, kernelErode);
@@ -130,15 +130,16 @@ float visualMatch(vehicleControl_t *robot) {
 
     //modeCheck(robot);
 
+    setMouseCallback(originWindow, RGBCallback, &imageMatch);
+    //setMouseCallback(originWindow, HSVCallback, &imageHSV);
+
     std::cout << compare_output << std::endl;
 
     //imshow("erode", imageErode);
-    imshow("origin", imageMatch);
+    imshow(originWindow, imageMatch);
     imshow("mask", imageMask);
     imshow("transform", transformImage);
     //imshow("compareMask", imageMaskCompare);
-    imshow("compare",imageCompare);
-    //imshow("HSV", imageHSV);
     //imshow("XOR", imageXOR);
 
     waitKey(1);
@@ -176,7 +177,7 @@ int midPointCapture(vehicleControl_t *robot){
     cvtColor(imageTrack, pinkChannel, COLOR_BGR2HSV);
     cvtColor(pinkChannel, pinkChannel, COLOR_BGR2GRAY);
     threshold(pinkChannel, pinkChannel, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
-    inRange(pinkChannel, Scalar(0, 0, 0), Scalar(156, 255, 255), pinkMask);
+    inRange(pinkChannel, Scalar(143, 61, 195), Scalar(156, 255, 255), pinkMask);
 
     pinkRatio = 100.0f * (float) countNonZero(pinkMask) / (float) (tracking_frame_width * tracking_frame_height);
 
@@ -238,7 +239,7 @@ int midPointCapture(vehicleControl_t *robot){
         }
     }
 
-    std::cout << "width: " << width << std::endl;
+    //std::cout << "width: " << width << std::endl;
 
     if (scanMode == 0){
         if (width >= 60 && gray_image.at<uchar>(Point(tracking_frame_width-1, sample_height)) == 0){
@@ -272,13 +273,6 @@ int midPointCapture(vehicleControl_t *robot){
         }
         else if (width == 0){
             tx = last_tx;
-
-            /* if (mid_point - last_tx > 100){
-                tx = 0;
-            }
-            else if (mid_point - last_tx < 100){
-                tx = tracking_frame_width-1;
-            } */
         }
     }
 
@@ -312,6 +306,62 @@ static void modeCheck(vehicleControl_t *robot){
     }
 }
 
+static void RGBCallback(int event, int x, int y, int, void *param){
+    Mat *imgRGB = (Mat *)param;
+    int areaDownX, areaDownY, areaUpX, areaUpY;
+
+    if (event == EVENT_LBUTTONDOWN){
+        robot.imageColor.blue = imgRGB->at<Vec3b>(Point(x, y))[0];
+        robot.imageColor.green = imgRGB->at<Vec3b>(Point(x, y))[1];
+        robot.imageColor.red = imgRGB->at<Vec3b>(Point(x, y))[2];
+
+        std::cout << "B: " << (int)robot.imageColor.blue << " G: " << (int)robot.imageColor.green
+                                            << " R: " << (int)robot.imageColor.red << std::endl;
+    }
+    else if (event == EVENT_RBUTTONDOWN){
+        areaDownX = x;
+        areaDownY = y;
+
+        std::cout << "Right Button Down" << std::endl;
+    }
+    else if (event == EVENT_RBUTTONUP){
+        areaUpX = x;
+        areaUpY = y;
+
+
+
+        std::cout << "Right Button Up" << std::endl;
+    }
+}
+
+static void HSVCallback(int event, int x, int y, int, void *param){
+    Mat *imgHSV = (Mat *)param;
+    int areaDownX, areaDownY, areaUpX, areaUpY;
+
+    if (event == EVENT_LBUTTONDOWN){
+        robot.imageColor.hue = imgHSV->at<Vec3b>(Point(x, y))[0];
+        robot.imageColor.saturate = imgHSV->at<Vec3b>(Point(x, y))[1];
+        robot.imageColor.value = imgHSV->at<Vec3b>(Point(x, y))[2];
+
+        std::cout << "H: " << (int)robot.imageColor.hue << " S: " << (int)robot.imageColor.saturate
+                                            << " V: " << (int)robot.imageColor.value << std::endl;
+    }
+    else if (event == EVENT_RBUTTONDOWN){
+        areaDownX = x;
+        areaDownY = y;
+
+        std::cout << "Right Button Down" << std::endl;
+    }
+    else if (event == EVENT_RBUTTONUP){
+        areaUpX = x;
+        areaUpY = y;
+
+
+
+        std::cout << "Right Button Up" << std::endl;
+    }
+}
+
 static void resizeCamera(vehicleControl_t *robot, int width, int height){
     robot->webcam.set(CAP_PROP_FRAME_WIDTH, width);
 	robot->webcam.set(CAP_PROP_FRAME_HEIGHT, height);
@@ -330,8 +380,8 @@ static void trackBarHsvDetection(vehicleControl_t *robot){
     createTrackbar("High V", hsv_window_name, &high_V, max_value, on_high_V_thresh_trackbar);
 
     while (true) {
-        robot->webcam >> frame;
-        //frame = imread("/home/pi/Pictures/Template/CountShape2.png");
+        //robot->webcam >> frame;
+        frame = imread("/home/pi/Pictures/Template/CountShape2.png");
         // Convert from BGR to HSV colorspace
         cvtColor(frame, frame_HSV, COLOR_BGR2HSV);
         // Detect the object based on HSV Range Values
@@ -344,7 +394,6 @@ static void trackBarHsvDetection(vehicleControl_t *robot){
         }
     }
 }
-
 
 /* Callback Functions of HSV Detection */
 static void on_low_H_thresh_trackbar(int, void *) {

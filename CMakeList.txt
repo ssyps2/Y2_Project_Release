@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.5)
+project(vehicle_final)
+
+set(CMAKE_CXX_STANDARD 14)
+
+add_executable(vehicle_final main.cpp devices.cpp lineTrack.cpp visualScan.cpp opencv_aee.cpp)
+
+#------ opencv related config ------#
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+target_link_libraries(vehicle_final ${OpenCV_LIBS})
