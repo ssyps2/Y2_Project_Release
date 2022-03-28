@@ -9,14 +9,15 @@ static void on_low_S_thresh_trackbar(int, void *);
 static void on_high_S_thresh_trackbar(int, void *);
 static void on_low_V_thresh_trackbar(int, void *);
 static void on_high_V_thresh_trackbar(int, void *);
+static void resizeCamera(int width, int height);
 
 VideoCapture webcam(0);     //open the webcam
 
 int matching_frame_width, matching_frame_height;
-int tracking_frame_width = 640, tracking_frame_height = 200;
+int tracking_frame_width, tracking_frame_height;
 string comparePath = "/home/pi/Pictures/Template/CountShape2.png";
 
-Mat image; //original image, rows:368, cols:640
+Mat imageMatch, imageTrack;
 Mat imageCompareInput, imageCompare;
 Mat imageHSV, imageMask, imageErode, imageDilate;
 Mat imgHSVCompare, imageMaskCompare;
@@ -30,8 +31,8 @@ Vector <Vector<Point>> contours, contoursCompare;
 Vector <Vector<Point>> approx, approxCompare;
 Point2f input_coordinate[4], output_coordinate[4];
 
-Mat gray_image(matching_frame_height, matching_frame_width, CV_8UC1);      //filtered image
-Mat pinkChannel(matching_frame_height, matching_frame_width, CV_8UC1);
+Mat gray_image(tracking_frame_height, tracking_frame_width, CV_8UC1);      //filtered image
+Mat pinkChannel(tracking_frame_height, tracking_frame_width, CV_8UC1);
 Mat pinkMask;
 
 
@@ -45,14 +46,16 @@ const string hsv_window_name = "Object Detection";
 
 
 void webcamInit(vehicleControl_t *robot){
-    matching_frame_width = (int)webcam.get(CAP_PROP_FRAME_WIDTH);
+    matching_frame_width = 1080;
     matching_frame_height = (int)webcam.get(CAP_PROP_FRAME_HEIGHT);
+    tracking_frame_width = 640;
+    tracking_frame_height = 200;
 
     robot->detectFlag = 0;
 }
 
 float visualMatch(vehicleControl_t *robot) {
-    webcam.read(image);
+    webcam.read(imageMatch);
 
     /*char photo = (char) waitKey(30);
     if (photo == 'c') {
@@ -84,7 +87,8 @@ float visualMatch(vehicleControl_t *robot) {
     erode(imageMask, imageErode, kernelErode);
     dilate(imageErode, imageDilate, kernelDilate);
     findContours(imageDilate, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-//    contour_area = contourArea(contours[0], false);
+
+//    contour_area = contourArea(contours[0]);
 
     approx.resize(contours.size());
 
@@ -147,7 +151,7 @@ int midPointCapture(vehicleControl_t *robot){
     int mid_point, width;  //middle position and width of the black line
 
     //process each frame of the video
-    webcam.read(image);     //read the image of one frame
+    webcam.read(imageTrack);     //read the image of one frame
 
     //filtering the original image
     cvtColor(image, gray_image, COLOR_BGR2HSV);
@@ -218,15 +222,15 @@ int midPointCapture(vehicleControl_t *robot){
     ty = sample_height;
 
     //put point
-    circle(image, Point(tx, ty), 2, Scalar(0, 0, 255), 3);
+    circle(imageTrack, Point(tx, ty), 2, Scalar(0, 0, 255), 3);
 
     //put location
     sprintf(location, "(%d, %d)", tx, ty);
-    putText(image, location, Point(mid_point-50, sample_height-15),
+    putText(imageTrack, location, Point(mid_point-50, sample_height-15),
             FONT_HERSHEY_SIMPLEX, 0.6, Scalar(0, 0, 255), 2);
 
     //display the processed video
-    imshow("Processed Video", image);
+    imshow("Processed Video", imageTrack);
     //("Binary", gray_image);
     //imshow("pink channel", pinkMask);
     waitKey(1);
@@ -234,8 +238,9 @@ int midPointCapture(vehicleControl_t *robot){
     return tx;
 }
 
-void readWebcam(){
-    webcam.read(image);
+static void resizeCamera(int width, int height){
+    webcam.set(CAP_PROP_FRAME_WIDTH, width);
+	webcam.set(CAP_PROP_FRAME_HEIGHT, height);
 }
 
 static void trackBarHsvDetection() {
