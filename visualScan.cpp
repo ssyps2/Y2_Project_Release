@@ -1,20 +1,20 @@
+#include <cstdlib>
 #include "visualScan.hpp"
 
 
 /* Prototype of Functions */
-static void trackBarHsvDetection();
+static void trackBarHsvDetection(vehicleControl_t *robot);
 static void on_low_H_thresh_trackbar(int, void *);
 static void on_high_H_thresh_trackbar(int, void *);
 static void on_low_S_thresh_trackbar(int, void *);
 static void on_high_S_thresh_trackbar(int, void *);
 static void on_low_V_thresh_trackbar(int, void *);
 static void on_high_V_thresh_trackbar(int, void *);
-static void resizeCamera(int width, int height);
+static void resizeCamera(vehicleControl_t *robot, int width, int height);
+static void modeCheck(vehicleControl_t *robot);
 
-VideoCapture webcam(0);     //open the webcam
-
-int matching_frame_width, matching_frame_height;
-int tracking_frame_width, tracking_frame_height;
+int matching_frame_width = 1920, matching_frame_height = 1080;
+int tracking_frame_width = 480, tracking_frame_height = 272;
 string comparePath = "/home/pi/Pictures/Template/CountShape2.png";
 
 Mat imageMatch, imageTrack;
@@ -31,9 +31,8 @@ Vector <Vector<Point>> contours, contoursCompare;
 Vector <Vector<Point>> approx, approxCompare;
 Point2f input_coordinate[4], output_coordinate[4];
 
-Mat gray_image(tracking_frame_height, tracking_frame_width, CV_8UC1);      //filtered image
-Mat pinkChannel(tracking_frame_height, tracking_frame_width, CV_8UC1);
-Mat pinkMask;
+Mat gray_image, pinkChannel, pinkMask;
+int last_tx;
 
 
 /* Global Variables used for HSV Detection */
@@ -46,20 +45,26 @@ const string hsv_window_name = "Object Detection";
 
 
 void webcamInit(vehicleControl_t *robot){
-    matching_frame_width = 1080;
-    matching_frame_height = (int)webcam.get(CAP_PROP_FRAME_HEIGHT);
-    tracking_frame_width = 640;
-    tracking_frame_height = 200;
+    robot->webcam.open(0);     //open the webcam
 
-    robot->detectFlag = 0;
+    if (!robot->webcam.isOpened())
+	{
+		std::cout << "ERROR: Unable to open the camera" << std::endl;
+		exit(-2);
+	}
+
+    resizeCamera(robot, tracking_frame_width, tracking_frame_height);
+    //resizeCamera(matching_frame_width, matching_frame_height);
+
+    robot->modeFlag = TRACK;
 }
 
 float visualMatch(vehicleControl_t *robot) {
-    webcam.read(imageMatch);
+    robot->webcam.read(imageMatch);
 
     /*char photo = (char) waitKey(30);
     if (photo == 'c') {
-        imwrite("/home/pi/Pictures/record.png", image);
+        imwrite("/home/pi/Pictures/record.png", imageMatch);
         puts("saved!\n");
     }*/
 
@@ -71,7 +76,7 @@ float visualMatch(vehicleControl_t *robot) {
     kernelErode = getStructuringElement(MORPH_RECT, Size(8, 8));
     kernelDilate = getStructuringElement(MORPH_RECT, Size(3, 3));
 
-    cvtColor(image, imageHSV, COLOR_BGR2HSV);
+    cvtColor(imageMatch, imageHSV, COLOR_BGR2HSV);
     cvtColor(imageHSV, imageHSV, COLOR_BGR2GRAY);
     threshold(imageHSV, imageHSV, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
     inRange(imageHSV, Scalar(0, 0, 0), Scalar(156, 255, 255), imageMask);
@@ -96,7 +101,7 @@ float visualMatch(vehicleControl_t *robot) {
         approx[i].resize(contours[i].size());
         approxPolyDP(contours[i], approx[i], 5, true);
     }
-    drawContours(image, Mat(approx[0]), -1, Scalar(0, 255, 0), 8);
+    drawContours(imageMatch, Mat(approx[0]), -1, Scalar(0, 255, 0), 8);
 
     //find contours of compared image
     findContours(imageMaskCompare, contoursCompare, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
@@ -123,10 +128,12 @@ float visualMatch(vehicleControl_t *robot) {
 
     compare_output = 100.0f * (1 - (float) countNonZero(imageXOR) / (float) (matching_frame_width * matching_frame_height));
 
+    //modeCheck(robot);
+
     std::cout << compare_output << std::endl;
 
     //imshow("erode", imageErode);
-    imshow("origin", image);
+    imshow("origin", imageMatch);
     imshow("mask", imageMask);
     imshow("transform", transformImage);
     //imshow("compareMask", imageMaskCompare);
@@ -145,78 +152,117 @@ int midPointCapture(vehicleControl_t *robot){
     int tx, ty;     //coordinate information
     char location[10];
 
-    const int sample_height = tracking_frame_height * 0.7;  //sampling height of the image
+    const int sample_height = tracking_frame_height * 0.5;  //sampling height of the image
     int sample_win[2]; //horizontal sampling windows, 0: previous, 1: now
+    int sample_sum = 0, sample_cnt = 0;
     int edge_first, edge_last;  //edge position
-    int mid_point, width;  //middle position and width of the black line
+    int mid_point = 0, width = 0;  //middle position and width of the black line
+
+    uchar scanMode = 0;
 
     //process each frame of the video
-    webcam.read(imageTrack);     //read the image of one frame
+    robot->webcam.read(imageTrack);     //read the image of one frame
+
+    resize(imageTrack, gray_image, Size(tracking_frame_width, tracking_frame_height));
+    resize(imageTrack, pinkChannel, Size(tracking_frame_width, tracking_frame_height));
 
     //filtering the original image
-    cvtColor(image, gray_image, COLOR_BGR2HSV);
+    cvtColor(imageTrack, gray_image, COLOR_BGR2HSV);
     inRange(gray_image, Scalar(0, 0, 0), Scalar(179, 255, 90), gray_image);
-    threshold(gray_image, gray_image, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
+    if (scanMode == 0){
+        threshold(gray_image, gray_image, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
+    }
 
-    cvtColor(image, pinkChannel, COLOR_BGR2HSV);
-    //cvtColor(pinkChannel, pinkChannel, COLOR_BGR2GRAY);
-    //threshold(pinkChannel, pinkChannel, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
+    cvtColor(imageTrack, pinkChannel, COLOR_BGR2HSV);
+    cvtColor(pinkChannel, pinkChannel, COLOR_BGR2GRAY);
+    threshold(pinkChannel, pinkChannel, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
     inRange(pinkChannel, Scalar(0, 0, 0), Scalar(156, 255, 255), pinkMask);
 
     pinkRatio = 100.0f * (float) countNonZero(pinkMask) / (float) (tracking_frame_width * tracking_frame_height);
 
     //std::cout << pinkRatio << std::endl;
 
-    if (pinkRatio >= 8 && pinkRatio <= 25){
-        robot->detectFlag = 1;
+    /*if (pinkRatio >= 8 && pinkRatio <= 25){
+        robot->modeFlag = DETECTED;
     }
     else {
-        robot->detectFlag = 0;
-    }
+        robot->modeFlag = TRACK;
+    }*/
 
-    //initialize the sampling windows
-    sample_win[1] = gray_image.at<uchar>(Point(0, sample_height));
+    if (scanMode == 0){
+        //initialize the sampling windows
+        sample_win[1] = gray_image.at<uchar>(Point(0, sample_height));
 
-    //reset the edge position of the frame to be scanned
-    edge_first = edge_last = 0;
+        //reset the edge position of the frame to be scanned
+        edge_first = edge_last = 0;
 
-    //find the center position of the tracking line for one frame
-    for (int pos = 0; pos < tracking_frame_width; pos++) {
-        sample_win[0] = sample_win[1];
-        sample_win[1] = gray_image.at<uchar>(Point(pos, sample_height));    //update the sampling window
+        //find the center position of the tracking line for one frame
+        for (int pos = 0; pos < tracking_frame_width; pos++) {
+            sample_win[0] = sample_win[1];
+            sample_win[1] = gray_image.at<uchar>(Point(pos, sample_height));    //update the sampling window
 
-        if (sample_win[1] - sample_win[0] < -240) {
-            edge_first = pos;
-        } else if (sample_win[1] - sample_win[0] > 240) {
-            edge_last = pos;
-            if (edge_last - edge_first > 15) {
-                break;
+            if (sample_win[1] - sample_win[0] < -240) {
+                edge_first = pos;
+            } else if (sample_win[1] - sample_win[0] > 240) {
+                edge_last = pos;
+                if (edge_last - edge_first > 15) {
+                    break;
+                }
+            } else if (pos == tracking_frame_width-1 && gray_image.at<uchar>(Point(tracking_frame_width-1, sample_height)) == 0) {
+                edge_last = tracking_frame_width-1;
+            } else if (pos == 0 && gray_image.at<uchar>(Point(0, sample_height)) == 0) {
+                edge_first = 0;
             }
-        } else if (pos == tracking_frame_width-1 && gray_image.at<uchar>(Point(tracking_frame_width-1, sample_height)) == 0) {
-            edge_last = tracking_frame_width-1;
-        } else if (pos == 0 && gray_image.at<uchar>(Point(0, sample_height)) == 0) {
-            edge_first = 0;
+        }
+
+        //mid-point location and line width calculation
+        mid_point = (edge_first + edge_last) / 2;
+        width = edge_last - edge_first;
+    }
+    else if (scanMode == 1){
+        for (int pos = 0; pos < tracking_frame_width; pos++) {
+            sample_win[2] = gray_image.at<uchar>(Point(pos, sample_height));
+            if (sample_win[2] > 240){
+                sample_sum += pos;
+                sample_cnt++;
+            }
+            if (sample_cnt < 5){
+                mid_point = 0;
+                width = 0;
+            }
+            else {
+                mid_point = (int)(sample_sum / sample_cnt);
+                width = sample_cnt;
+            }
         }
     }
 
-    //mid-point location and line width calculation
-    mid_point = (edge_first + edge_last) / 2;
-    width = edge_last - edge_first;
+    std::cout << "width: " << width << std::endl;
 
-    //std::cout << "width:" << width << std::endl;
-
-    if (width >= 90 && gray_image.at<uchar>(Point(tracking_frame_width-1, sample_height)) == 0){
-        tx = edge_last;
+    if (width >= 60 && gray_image.at<uchar>(Point(tracking_frame_width-1, sample_height)) == 0){
+        last_tx = tx;
+        if (scanMode == 0){
+            tx = edge_last;
+        }
+        else if (scanMode == 1){
+            tx = (int)(mid_point + width/2);
+        }
     }
-    else if (width >= 90 && gray_image.at<uchar>(Point(0, sample_height)) == 0){
-        tx = edge_first;
+    else if (width >= 60 && gray_image.at<uchar>(Point(0, sample_height)) == 0){
+        last_tx = tx;
+        if (scanMode == 0){
+            tx = edge_first;
+        }
+        else if (scanMode == 1){
+            tx = (int)(mid_point - width/2);
+        }
     }
-    else if (width > 15 && width < 90){
+    else if (width > 15 && width < 60){
+        last_tx = tx;
         tx = mid_point;
     }
-    //out of view
     else if (width == 0){
-        robot->detectFlag = 2;
+        tx = last_tx;
     }
 
     ty = sample_height;
@@ -226,24 +272,35 @@ int midPointCapture(vehicleControl_t *robot){
 
     //put location
     sprintf(location, "(%d, %d)", tx, ty);
-    putText(imageTrack, location, Point(mid_point-50, sample_height-15),
+    putText(imageTrack, location, Point(tx-50, sample_height-15),
             FONT_HERSHEY_SIMPLEX, 0.6, Scalar(0, 0, 255), 2);
+
+    //modeCheck(robot);
 
     //display the processed video
     imshow("Processed Video", imageTrack);
-    //("Binary", gray_image);
+    imshow("Binary", gray_image);
     //imshow("pink channel", pinkMask);
     waitKey(1);
 
     return tx;
 }
 
-static void resizeCamera(int width, int height){
-    webcam.set(CAP_PROP_FRAME_WIDTH, width);
-	webcam.set(CAP_PROP_FRAME_HEIGHT, height);
+static void modeCheck(vehicleControl_t *robot){
+    if(robot->lastModeFlag == DETECTED && robot->modeFlag == MATCH){
+        resizeCamera(robot, matching_frame_width, matching_frame_height);
+    }
+    else if (robot->lastModeFlag == MATCHDONE && robot->modeFlag == TRACK){
+        resizeCamera(robot, tracking_frame_width, tracking_frame_height);
+    }
 }
 
-static void trackBarHsvDetection() {
+static void resizeCamera(vehicleControl_t *robot, int width, int height){
+    robot->webcam.set(CAP_PROP_FRAME_WIDTH, width);
+	robot->webcam.set(CAP_PROP_FRAME_HEIGHT, height);
+}
+
+static void trackBarHsvDetection(vehicleControl_t *robot){
     Mat frame, frame_HSV, frame_threshold;
     namedWindow(hsv_window_name);
 
@@ -256,7 +313,7 @@ static void trackBarHsvDetection() {
     createTrackbar("High V", hsv_window_name, &high_V, max_value, on_high_V_thresh_trackbar);
 
     while (true) {
-        webcam >> frame;
+        robot->webcam >> frame;
         //frame = imread("/home/pi/Pictures/Template/CountShape2.png");
         // Convert from BGR to HSV colorspace
         cvtColor(frame, frame_HSV, COLOR_BGR2HSV);

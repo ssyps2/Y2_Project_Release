@@ -11,6 +11,4 @@ float visualMatch(vehicleControl_t *robot);
 
 int midPointCapture(vehicleControl_t *robot);
 
-void readWebcam();
-
 #endif

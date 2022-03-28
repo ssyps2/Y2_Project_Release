@@ -85,29 +85,28 @@ void trackLine(vehicleControl_t *robot){
     //serialPrintf(robot->serial, "#Bafrfr %03d %03d %03d %03d", rightMotorSpeed, leftMotorSpeed, leftMotorSpeed, rightMotorSpeed);
     //serialPrintf(robot->serial, "#ha");
 
-    if (robot->detectFlag == 0){
+    if (robot->modeFlag == TRACK){
         serialPrintf(robot->serial, "#Ba%c%c%c%c %03d %03d %03d %03d", Motor1Direction, Motor2Direction, Motor3Direction, Motor4Direction,
                                                                     rightMotorSpeed, leftMotorSpeed, leftMotorSpeed, rightMotorSpeed);
     }
-    else if (robot->detectFlag == 1){
+    else if (robot->modeFlag == DETECTED){
         //stop the vehicle
         //serialPrintf(robot->serial, "#ha");
         //raise the camera
 
     }
-    else if (robot->detectFlag == 2){
-        //out of view
-        //serialPrintf(robot->serial, "#ha");
+    else if (robot->modeFlag == MATCH){
+        //
     }
 }
 
 static void PIDInit(PIDTypeDef *pid){
     //initialize PID parameters
-    pid->kp = 2;
+    pid->kp = 3;
     pid->ki = 0;
     pid->kd = 0;
     pid->maxIOut = 10;
-    pid->maxOut = 64;
+    pid->maxOut = 70;
 
     //set error and output to be zero
     pid->errorPrevious = pid->error = 0;

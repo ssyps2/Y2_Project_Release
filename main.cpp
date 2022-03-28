@@ -13,7 +13,7 @@ int main() {
     webcamInit(&robot);
     chassisInit(&robot);
 
-    //webcamReadThread(readWebcam);
+    //webcamReadThread();
 
     while(true){
         midPointCapture(&robot);

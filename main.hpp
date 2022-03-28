@@ -23,12 +23,21 @@ typedef struct{
     int out, maxOut, maxIOut;
 }PIDTypeDef;
 
+typedef enum{
+    TRACK = 0,
+    DETECTED,
+    MATCH,
+    MATCHDONE,
+}modeTypedef;
+
 typedef struct{
     int serial;
     int lcd;
     int servo;
+    VideoCapture webcam;
     PIDTypeDef pid;
-    uchar detectFlag;
+    modeTypedef lastModeFlag;
+    modeTypedef modeFlag;
 }vehicleControl_t;
 
 
