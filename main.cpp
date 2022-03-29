@@ -16,8 +16,8 @@ int main() {
     //webcamReadThread();
 
     while(true){
-        //midPointCapture(&robot);
-        //trackLine(&robot);
-        visualMatch(&robot);
+        midPointCapture(&robot);
+        trackLine(&robot);
+        //visualMatch(&robot);
     }
 }
