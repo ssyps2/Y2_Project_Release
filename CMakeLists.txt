@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(vehicle_final)
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 add_executable(vehicle_final main.cpp devices.cpp lineTrack.cpp visualScan.cpp opencv_aee.cpp)
 
@@ -18,4 +19,4 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${WIRINGPI_INCLUDE_DIRS})
 target_link_libraries(vehicle_final ${OpenCV_LIBS} ${WIRINGPI_LIBRARIES})
 
-add_definitions(/home/pi/wiringPi-8d188fa/wiringPi -lwiringPi)
+add_definitions(-L/home/pi/wiringPi-8d188fa/wiringPi -lwiringPi)
