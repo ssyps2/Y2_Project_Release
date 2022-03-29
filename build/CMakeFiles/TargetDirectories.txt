@@ -1,0 +1,3 @@
+/home/pi/opencv_samples/vehicle_final/build/CMakeFiles/rebuild_cache.dir
+/home/pi/opencv_samples/vehicle_final/build/CMakeFiles/edit_cache.dir
+/home/pi/opencv_samples/vehicle_final/build/CMakeFiles/vehicle_final.dir

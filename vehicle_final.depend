@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1648460746 source:/home/pi/opencv_samples/vehicle_final/main.cpp
+1648526312 source:/home/pi/opencv_samples/vehicle_final/main.cpp
 	"main.hpp"
 	"visualScan.hpp"
 	"lineTrack.hpp"
@@ -739,7 +739,7 @@
 	<vector>
 	"opencv2/imgproc.hpp"
 
-1648460186 source:/home/pi/opencv_samples/vehicle_final/lineTrack.cpp
+1648539969 source:/home/pi/opencv_samples/vehicle_final/lineTrack.cpp
 	<stdlib.h>
 	"imgproc.h"
 	"wiringSerial.h"
@@ -766,9 +766,10 @@
 1648447796 /home/pi/opencv_samples/vehicle_final/visualScan.hpp
 	"main.hpp"
 
-1648484111 source:/home/pi/opencv_samples/vehicle_final/visualScan.cpp
+1648540721 source:/home/pi/opencv_samples/vehicle_final/visualScan.cpp
 	<cstdlib>
 	"visualScan.hpp"
+	"opencv_aee.hpp"
 
 1648198781 source:/home/pi/opencv_samples/vehicle_final/devices.cpp
 	"lcd.h"
@@ -780,4 +781,14 @@
 
 1648095605 /home/pi/opencv_samples/vehicle_final/devices.hpp
 	"main.hpp"
+
+1522209224 /home/pi/opencv_samples/vehicle_final/opencv_aee.hpp
+	<stdio.h>
+	<iostream>
+	"opencv2/core.hpp"
+	"opencv2/features2d.hpp"
+	"opencv2/highgui.hpp"
+	"opencv2/calib3d.hpp"
+	"opencv2/xfeatures2d.hpp"
+	"opencv2/imgproc.hpp"
 

@@ -88,7 +88,7 @@ void trackLine(vehicleControl_t *robot){
     if (robot->modeFlag == TRACK){
         serialPrintf(robot->serial, "#Ba%c%c%c%c %03d %03d %03d %03d", Motor1Direction, Motor2Direction, Motor3Direction, Motor4Direction,
                                                                     rightMotorSpeed, leftMotorSpeed, leftMotorSpeed, rightMotorSpeed);
-        std::cout << "OK" << std::endl;
+        //std::cout << "OK" << std::endl;
     }
     else if (robot->modeFlag == DETECTED){
         //stop the vehicle
@@ -103,11 +103,11 @@ void trackLine(vehicleControl_t *robot){
 
 static void PIDInit(PIDTypeDef *pid){
     //initialize PID parameters
-    pid->kp = 3;
+    pid->kp = 3.0;
     pid->ki = 0;
-    pid->kd = 0;
+    pid->kd = 0.3;
     pid->maxIOut = 10;
-    pid->maxOut = 70;
+    pid->maxOut = 75;
 
     //set error and output to be zero
     pid->errorPrevious = pid->error = 0;
