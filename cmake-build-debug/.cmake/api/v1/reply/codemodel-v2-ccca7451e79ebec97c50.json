@@ -27,7 +27,7 @@
 					[
 						0
 					],
-					"name" : "visual_test",
+					"name" : "Y2_Project_Release",
 					"targetIndexes" : 
 					[
 						0
@@ -38,9 +38,9 @@
 			[
 				{
 					"directoryIndex" : 0,
-					"id" : "visual_test::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-visual_test-Debug-afedb49692069a53f64d.json",
-					"name" : "visual_test",
+					"id" : "Y2_Project_Release::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Y2_Project_Release-Debug-3d64028f78b1e87a85fc.json",
+					"name" : "Y2_Project_Release",
 					"projectIndex" : 0
 				}
 			]
@@ -49,8 +49,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "/home/pengyuan/CLionProjects/visual_test/cmake-build-debug",
-		"source" : "/home/pengyuan/CLionProjects/visual_test"
+		"build" : "/home/pengyuan/Documents/CLionProjects/Y2_Project_Release/cmake-build-debug",
+		"source" : "/home/pengyuan/Documents/CLionProjects/Y2_Project_Release"
 	},
 	"version" : 
 	{

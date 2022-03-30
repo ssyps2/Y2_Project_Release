@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "visual_test"
+			"path" : "Y2_Project_Release"
 		}
 	],
 	"backtrace" : 1,
@@ -78,7 +78,7 @@
 			]
 		}
 	],
-	"id" : "visual_test::@6890427a1f51a3e7e1df",
+	"id" : "Y2_Project_Release::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -117,8 +117,8 @@
 		],
 		"language" : "CXX"
 	},
-	"name" : "visual_test",
-	"nameOnDisk" : "visual_test",
+	"name" : "Y2_Project_Release",
+	"nameOnDisk" : "Y2_Project_Release",
 	"paths" : 
 	{
 		"build" : ".",

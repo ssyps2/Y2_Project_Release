@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/pengyuan/CLionProjects/visual_test/cmake-build-debug"
+			"value" : "/home/pengyuan/Documents/CLionProjects/Y2_Project_Release/cmake-build-debug"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -579,7 +579,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/pengyuan/CLionProjects/visual_test"
+			"value" : "/home/pengyuan/Documents/CLionProjects/Y2_Project_Release"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -819,7 +819,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "visual_test"
+			"value" : "Y2_Project_Release"
 		},
 		{
 			"name" : "CMAKE_RANLIB",
@@ -1126,6 +1126,42 @@
 			"value" : "/usr/lib/x86_64-linux-gnu/cmake/opencv4"
 		},
 		{
+			"name" : "Y2_Project_Release_BINARY_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/home/pengyuan/Documents/CLionProjects/Y2_Project_Release/cmake-build-debug"
+		},
+		{
+			"name" : "Y2_Project_Release_IS_TOP_LEVEL",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "ON"
+		},
+		{
+			"name" : "Y2_Project_Release_SOURCE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/home/pengyuan/Documents/CLionProjects/Y2_Project_Release"
+		},
+		{
 			"name" : "visual_test_BINARY_DIR",
 			"properties" : 
 			[
@@ -1135,7 +1171,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/pengyuan/CLionProjects/visual_test/cmake-build-debug"
+			"value" : "/home/pengyuan/Documents/CLionProjects/Y2_Project_Release/cmake-build-debug"
 		},
 		{
 			"name" : "visual_test_IS_TOP_LEVEL",
@@ -1159,7 +1195,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/pengyuan/CLionProjects/visual_test"
+			"value" : "/home/pengyuan/Documents/CLionProjects/Y2_Project_Release"
 		}
 	],
 	"kind" : "cache",

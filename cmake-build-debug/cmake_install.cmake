@@ -1,4 +1,4 @@
-# Install script for directory: /home/pengyuan/CLionProjects/visual_test
+# Install script for directory: /home/pengyuan/Documents/CLionProjects/Y2_Project_Release
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/pengyuan/CLionProjects/visual_test/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/pengyuan/Documents/CLionProjects/Y2_Project_Release/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

@@ -2,12 +2,14 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
-#include <opencv2/videoio.hpp>
 #include <opencv2/core.hpp>
 
 /* Namespace Usage */
-using namespace std;
 using namespace cv;
+using std::string;
+
+template <typename Tp, typename Alloc = std::allocator<Tp>>
+using Vector = std::vector<Tp, Alloc>;
 
 /* Prototype of Functions */
 void TrackBar_HSV_Detection(const string& file_path);
@@ -25,43 +27,49 @@ int low_H = 0, low_S = 0, low_V = 0;
 int high_H = max_value_H, high_S = max_value, high_V = max_value;
 string hsv_window_name = "Object Detection";
 
+
 /* Start of Main */
 int main() {
-    string image_path = "/home/pengyuan/Pictures/contour3.png";
-    string compare_path = "/home/pengyuan/Pictures/contour4.png";
+    string image_path = "/home/pengyuan/Pictures/record.png";
+    string comparePath = "/home/pengyuan/Pictures/Templates/CountShape2.png";
 
-//    TrackBar_HSV_Detection(image_path);
+    int matching_frame_width = 480, matching_frame_height = 360;
 
-    Mat img = imread(image_path);
-    Mat imgCmp_Input = imread(compare_path);
-    Mat imgCmp;
-    resize(imgCmp_Input, imgCmp, Size(img.cols, img.rows));
-    Mat imgHSV, mask, imgEro, imgDil;
-    Mat imgHSV_Cmp, mask_Cmp;
-    Mat matTransform, imgTransform;
-    Mat img_XOR;
+    Mat imageMatch(matching_frame_width, matching_frame_height, CV_8UC3);
+    Mat imageCompareInput, imageCompare;
+    Mat imageHSV, imageMask, imageErode, imageDilate;
+    Mat imgHSVCompare, imageMaskCompare;
+    Mat transformMatrix, transformImage, imageXOR;
+    Mat kernelErode, kernelDilate;
 
-    double contour_area, approx_area;
+    double contour_area;
     float compare_output;
 
-    vector<vector<Point>> contours, contours_Cmp;
-    vector<vector<Point>> approx, approx_Cmp;
+    Vector <Vector<Point>> contours, contoursCompare;
+    Vector <Vector<Point>> approx, approxCompare;
     Point2f input_coordinate[4], output_coordinate[4];
 
-    Mat kernel_erode = getStructuringElement(MORPH_RECT, Size(3,3));
-    Mat kernel_dilate = getStructuringElement(MORPH_RECT, Size(3,3));
+    //TrackBar_HSV_Detection(image_path);
+    //TrackBar_HSV_Detection(comparePath);
 
-    cvtColor(img, imgHSV, COLOR_BGR2HSV);
-    inRange(imgHSV, Scalar(132, 50, 58), Scalar(172, 255, 255), mask);
+    imageCompareInput = imread(comparePath);
+    resize(imageCompareInput, imageCompare, Size(matching_frame_width, matching_frame_height));
 
-    cvtColor(imgCmp, imgHSV_Cmp, COLOR_BGR2HSV);
-    inRange(imgHSV_Cmp, Scalar(132, 50, 58), Scalar(172, 255, 255), mask_Cmp);
+    kernelErode = getStructuringElement(MORPH_RECT, Size(6, 6));
+    kernelDilate = getStructuringElement(MORPH_RECT, Size(3, 3));
+
+    cvtColor(imageMatch, imageHSV, COLOR_BGR2HSV);
+    inRange(imageHSV, Scalar(157, 157, 114), Scalar(180, 255, 255), imageMask);
+
+    cvtColor(imageCompare, imgHSVCompare, COLOR_BGR2HSV);
+    inRange(imgHSVCompare, Scalar(64, 0, 0), Scalar(180, 255, 255), imageMaskCompare);
 
     //erode-dilate algorithm
-    erode(mask, imgEro, kernel_erode);
-    dilate(imgEro, imgDil, kernel_dilate);
-    findContours(imgDil, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-//    contour_area = contourArea(contours[0], false);
+    erode(imageMask, imageErode, kernelErode);
+    dilate(imageErode, imageDilate, kernelDilate);
+    findContours(imageDilate, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+
+    //contour_area = contourArea(contours[0]);
 
     approx.resize(contours.size());
 
@@ -70,38 +78,38 @@ int main() {
         approx[i].resize(contours[i].size());
         approxPolyDP(contours[i], approx[i], 5, true);
     }
-    drawContours(img, Mat(approx[0]), -1, Scalar(0,255,0), 8);
+    drawContours(imageMatch, Mat(approx[0]), -1, Scalar(0,255,0), 8);
 
     //find contours of compared image
-    findContours(mask_Cmp, contours_Cmp, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    findContours(imageMaskCompare, contoursCompare, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
-    approx_Cmp.resize(contours_Cmp.size());
+    approxCompare.resize(contoursCompare.size());
 
-    for (int i = 0; i<contours_Cmp.size(); i++)
+    for (int i = 0; i<contoursCompare.size(); i++)
     {
-        approx_Cmp[i].resize(contours_Cmp[i].size());
-        approxPolyDP(contours_Cmp[i], approx_Cmp[i], 5, true);
+        approxCompare[i].resize(contoursCompare[i].size());
+        approxPolyDP(contoursCompare[i], approxCompare[i], 5, true);
     }
-    drawContours(imgCmp, Mat(approx_Cmp[0]), -1, Scalar(0,255,0), 8);
+    drawContours(imageCompare, Mat(approxCompare[0]), -1, Scalar(0,255,0), 8);
 
     for (int j = 0; j < 4; j++){
         input_coordinate[j] = approx[0][j];
-        output_coordinate[j] = approx_Cmp[0][j];
+        output_coordinate[j] = approxCompare[0][j];
     }
 
-    matTransform = getPerspectiveTransform(input_coordinate, output_coordinate);
-    warpPerspective(imgDil, imgTransform, matTransform, Size(imgDil.cols,imgDil.rows));
+    transformMatrix = getPerspectiveTransform(input_coordinate, output_coordinate);
+    warpPerspective(imageDilate, transformImage, transformMatrix, Size(imageDilate.cols,imageDilate.rows));
 
-    //XOR
-    bitwise_xor(imgTransform, mask_Cmp, img_XOR);
+    bitwise_xor(transformImage, imageMaskCompare, imageXOR);
 
-    compare_output = 100.0f * (1 - (float)countNonZero(img_XOR) / (float)(img_XOR.cols * img_XOR.rows));
+    compare_output = 100.0f * (1 - (float)countNonZero(imageXOR) / (float)(imageXOR.cols * imageXOR.rows));
 
-    cout << compare_output << endl;
+    std::cout << compare_output << std::endl;
 
-//    imshow("what", imgTransform);
-//    imshow("compare", mask_Cmp);
-    imshow("XOR", img_XOR);
+    imshow("origin", imageMatch);
+//    imshow("what", transformImage);
+//    imshow("compare", imageMaskCompare);
+//    imshow("XOR", imageXOR);
     waitKey(0);
 }
 

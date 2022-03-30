@@ -6,7 +6,7 @@
 # It is included in the main 'build.ninja'.
 
 # =============================================================================
-# Project: visual_test
+# Project: Y2_Project_Release
 # Configurations: Debug
 # =============================================================================
 # =============================================================================
@@ -22,7 +22,7 @@ rule CUSTOM_COMMAND
 #############################################
 # Rule for compiling CXX files.
 
-rule CXX_COMPILER__visual_test_Debug
+rule CXX_COMPILER__Y2_Project_Release_Debug
   depfile = $DEP_FILE
   deps = gcc
   command = /usr/bin/c++ $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
@@ -32,7 +32,7 @@ rule CXX_COMPILER__visual_test_Debug
 #############################################
 # Rule for linking CXX executable.
 
-rule CXX_EXECUTABLE_LINKER__visual_test_Debug
+rule CXX_EXECUTABLE_LINKER__Y2_Project_Release_Debug
   command = $PRE_LINK && /usr/bin/c++ $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD
   description = Linking CXX executable $TARGET_FILE
   restat = $RESTAT
@@ -42,7 +42,7 @@ rule CXX_EXECUTABLE_LINKER__visual_test_Debug
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = /home/pengyuan/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.6777.58/bin/cmake/linux/bin/cmake --regenerate-during-build -S/home/pengyuan/CLionProjects/visual_test -B/home/pengyuan/CLionProjects/visual_test/cmake-build-debug
+  command = /home/pengyuan/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.6777.58/bin/cmake/linux/bin/cmake --regenerate-during-build -S/home/pengyuan/Documents/CLionProjects/Y2_Project_Release -B/home/pengyuan/Documents/CLionProjects/Y2_Project_Release/cmake-build-debug
   description = Re-running CMake...
   generator = 1
 

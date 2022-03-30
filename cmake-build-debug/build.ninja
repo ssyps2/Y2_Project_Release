@@ -11,7 +11,7 @@
 # =============================================================================
 
 # =============================================================================
-# Project: visual_test
+# Project: Y2_Project_Release
 # Configurations: Debug
 # =============================================================================
 
@@ -39,62 +39,62 @@ include CMakeFiles/rules.ninja
 #############################################
 # Logical path to working directory; prefix for absolute paths.
 
-cmake_ninja_workdir = /home/pengyuan/CLionProjects/visual_test/cmake-build-debug/
-
-#############################################
-# Utility command for edit_cache
-
-build CMakeFiles/edit_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /home/pengyuan/CLionProjects/visual_test/cmake-build-debug && /home/pengyuan/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.6777.58/bin/cmake/linux/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
-  DESC = No interactive CMake dialog available...
-  restat = 1
-
-build edit_cache: phony CMakeFiles/edit_cache.util
-
+cmake_ninja_workdir = /home/pengyuan/Documents/CLionProjects/Y2_Project_Release/cmake-build-debug/
 
 #############################################
 # Utility command for rebuild_cache
 
 build CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /home/pengyuan/CLionProjects/visual_test/cmake-build-debug && /home/pengyuan/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.6777.58/bin/cmake/linux/bin/cmake --regenerate-during-build -S/home/pengyuan/CLionProjects/visual_test -B/home/pengyuan/CLionProjects/visual_test/cmake-build-debug
+  COMMAND = cd /home/pengyuan/Documents/CLionProjects/Y2_Project_Release/cmake-build-debug && /home/pengyuan/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.6777.58/bin/cmake/linux/bin/cmake --regenerate-during-build -S/home/pengyuan/Documents/CLionProjects/Y2_Project_Release -B/home/pengyuan/Documents/CLionProjects/Y2_Project_Release/cmake-build-debug
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
 
 build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 
+
+#############################################
+# Utility command for edit_cache
+
+build CMakeFiles/edit_cache.util: CUSTOM_COMMAND
+  COMMAND = cd /home/pengyuan/Documents/CLionProjects/Y2_Project_Release/cmake-build-debug && /home/pengyuan/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.6777.58/bin/cmake/linux/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+  DESC = No interactive CMake dialog available...
+  restat = 1
+
+build edit_cache: phony CMakeFiles/edit_cache.util
+
 # =============================================================================
-# Object build statements for EXECUTABLE target visual_test
+# Object build statements for EXECUTABLE target Y2_Project_Release
 
 
 #############################################
-# Order-only phony target for visual_test
+# Order-only phony target for Y2_Project_Release
 
-build cmake_object_order_depends_target_visual_test: phony || CMakeFiles/visual_test.dir
+build cmake_object_order_depends_target_Y2_Project_Release: phony || CMakeFiles/Y2_Project_Release.dir
 
-build CMakeFiles/visual_test.dir/main.cpp.o: CXX_COMPILER__visual_test_Debug /home/pengyuan/CLionProjects/visual_test/main.cpp || cmake_object_order_depends_target_visual_test
-  DEP_FILE = CMakeFiles/visual_test.dir/main.cpp.o.d
+build CMakeFiles/Y2_Project_Release.dir/main.cpp.o: CXX_COMPILER__Y2_Project_Release_Debug /home/pengyuan/Documents/CLionProjects/Y2_Project_Release/main.cpp || cmake_object_order_depends_target_Y2_Project_Release
+  DEP_FILE = CMakeFiles/Y2_Project_Release.dir/main.cpp.o.d
   FLAGS = -g -std=gnu++14
   INCLUDES = -isystem /usr/include/opencv4
-  OBJECT_DIR = CMakeFiles/visual_test.dir
-  OBJECT_FILE_DIR = CMakeFiles/visual_test.dir
+  OBJECT_DIR = CMakeFiles/Y2_Project_Release.dir
+  OBJECT_FILE_DIR = CMakeFiles/Y2_Project_Release.dir
 
 
 # =============================================================================
-# Link build statements for EXECUTABLE target visual_test
+# Link build statements for EXECUTABLE target Y2_Project_Release
 
 
 #############################################
-# Link the executable visual_test
+# Link the executable Y2_Project_Release
 
-build visual_test: CXX_EXECUTABLE_LINKER__visual_test_Debug CMakeFiles/visual_test.dir/main.cpp.o | /usr/lib/x86_64-linux-gnu/libopencv_highgui.so.4.2.0 /usr/lib/x86_64-linux-gnu/libopencv_videoio.so.4.2.0 /usr/lib/x86_64-linux-gnu/libopencv_imgcodecs.so.4.2.0 /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.2.0 /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.2.0
+build Y2_Project_Release: CXX_EXECUTABLE_LINKER__Y2_Project_Release_Debug CMakeFiles/Y2_Project_Release.dir/main.cpp.o | /usr/lib/x86_64-linux-gnu/libopencv_highgui.so.4.2.0 /usr/lib/x86_64-linux-gnu/libopencv_videoio.so.4.2.0 /usr/lib/x86_64-linux-gnu/libopencv_imgcodecs.so.4.2.0 /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.2.0 /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.2.0
   FLAGS = -g
   LINK_LIBRARIES = /usr/lib/x86_64-linux-gnu/libopencv_highgui.so.4.2.0  /usr/lib/x86_64-linux-gnu/libopencv_videoio.so.4.2.0  /usr/lib/x86_64-linux-gnu/libopencv_imgcodecs.so.4.2.0  /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.2.0  /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.2.0
-  OBJECT_DIR = CMakeFiles/visual_test.dir
+  OBJECT_DIR = CMakeFiles/Y2_Project_Release.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_FILE = visual_test
-  TARGET_PDB = visual_test.dbg
+  TARGET_FILE = Y2_Project_Release
+  TARGET_PDB = Y2_Project_Release.dbg
 
 # =============================================================================
 # Target aliases.
@@ -105,9 +105,9 @@ build visual_test: CXX_EXECUTABLE_LINKER__visual_test_Debug CMakeFiles/visual_te
 # =============================================================================
 
 #############################################
-# Folder: /home/pengyuan/CLionProjects/visual_test/cmake-build-debug
+# Folder: /home/pengyuan/Documents/CLionProjects/Y2_Project_Release/cmake-build-debug
 
-build all: phony visual_test
+build all: phony Y2_Project_Release
 
 # =============================================================================
 # Built-in targets
