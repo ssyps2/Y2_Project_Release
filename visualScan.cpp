@@ -1,6 +1,5 @@
-#include <cstdlib>
 #include "visualScan.hpp"
-#include "opencv_aee.hpp"
+//#include "opencv_aee.hpp"
 
 
 /* Prototype of Functions */
@@ -70,7 +69,7 @@ int midPointCapture(vehicleControl_t *robot){
     int tx, ty;     //coordinate information
     char location[10];
 
-    const int sample_height = tracking_frame_height * 0.6;  //sampling height of the image
+    const int sample_height = tracking_frame_height * 0.7;  //sampling height of the image
     int sample_win[3]; //horizontal sampling windows, 0: previous, 1: now
     int sample_sum = 0, sample_cnt = 0;
     int edge_first, edge_last;  //edge position
@@ -85,8 +84,6 @@ int midPointCapture(vehicleControl_t *robot){
     resize(imageTrack, pinkChannel, Size(tracking_frame_width, tracking_frame_height));
 
     //filtering the original image
-    //cvtColor(imageTrack, gray_image, COLOR_BGR2GRAY);
-    //threshold(gray_image, gray_image, 55, 255, THRESH_BINARY_INV | THRESH_OTSU);
     cvtColor(imageTrack, gray_image, COLOR_BGR2HSV);
     inRange(gray_image, Scalar(0, 0, 0), Scalar(179, 255, 70), gray_image);
     if (scanMode == 0){
@@ -198,41 +195,35 @@ int midPointCapture(vehicleControl_t *robot){
     //put point
     circle(imageTrack, Point(tx, ty), 2, Scalar(0, 0, 255), 3);
 
-    //put location
-    //sprintf(location, "(%d, %d)", tx, ty);
-    //putText(imageTrack, location, Point(tx-50, sample_height-15),
-            //FONT_HERSHEY_SIMPLEX, 0.6, Scalar(0, 0, 255), 2);
-
     //modeCheck(robot);
 
     setMouseCallback("Processed Video", RGBCallback, &imageTrack);
 
     //display the processed video
-    //imshow("Processed Video", imageTrack);
+    imshow("Processed Video", imageTrack);
     //imshow("Binary", gray_image);
     //imshow("pink channel", pinkMask);
-    //waitKey(1);
+    waitKey(1);
 
     return tx;
 }
 
 float visualMatch(vehicleControl_t *robot) {
-    const string originWindow = "origin";
-
+    compare_output = 0;
     robot->webcam.read(imageMatch);
-
-    char photo = (char) waitKey(30);
-    if (photo == 'c') {
-        imwrite("/home/pi/Pictures/record.png", imageMatch);
-        puts("saved!\n");
-    }
 
     imageCompareInput = imread(comparePath);
     resize(imageCompareInput, imageCompare, Size(matching_frame_width, matching_frame_height));
 
+    char keyRecord = (char) waitKey(1);
+    if (keyRecord == 'c') {
+        imwrite("/home/pi/Pictures/record.png", imageMatch);
+        std::cout << "Record success" << std::endl;
+    }
+
     //trackBarHsvDetection(robot);
 
-    kernelErode = getStructuringElement(MORPH_RECT, Size(8, 8));
+    kernelErode = getStructuringElement(MORPH_RECT, Size(6, 6));
     kernelDilate = getStructuringElement(MORPH_RECT, Size(3, 3));
 
     cvtColor(imageMatch, imageHSV, COLOR_BGR2HSV);
@@ -248,7 +239,7 @@ float visualMatch(vehicleControl_t *robot) {
 
 //    contour_area = contourArea(contours[0]);
 
-    approx.resize(contours.size());
+    /*approx.resize(contours.size());
 
     for (int i = 0; i < contours.size(); i++) {
         approx[i].resize(contours[i].size());
@@ -274,24 +265,24 @@ float visualMatch(vehicleControl_t *robot) {
     }
 
     transformMatrix = getPerspectiveTransform(input_coordinate, output_coordinate);
-    warpPerspective(imageDilate, transformImage, transformMatrix, Size(matching_frame_width, matching_frame_height));
+    warpPerspective(imageDilate, transformImage, transformMatrix, Size(imageDilate.cols, imageDilate.rows));
 
     //XOR
     bitwise_xor(transformImage, imageMaskCompare, imageXOR);
 
-    compare_output = 100.0f * (1 - (float) countNonZero(imageXOR) / (float) (matching_frame_width * matching_frame_height));
+    compare_output = 100.0f * (1 - (float) countNonZero(imageXOR) / (float) (imageXOR.cols * imageXOR.rows));*/
 
     //modeCheck(robot);
 
-    setMouseCallback(originWindow, RGBCallback, &imageMatch);
-    //setMouseCallback(originWindow, HSVCallback, &imageHSV);
+    //setMouseCallback("origin", RGBCallback, &imageMatch);
+    //setMouseCallback("origin", HSVCallback, &imageHSV);
 
-    std::cout << compare_output << std::endl;
+    //std::cout << compare_output << std::endl;
 
     //imshow("erode", imageErode);
-    imshow(originWindow, imageMatch);
-    imshow("mask", imageMask);
-    imshow("transform", transformImage);
+    imshow("origin", imageMatch);
+    //imshow("mask", imageMask);
+    //imshow("transform", transformImage);
     //imshow("compareMask", imageMaskCompare);
     //imshow("XOR", imageXOR);
 

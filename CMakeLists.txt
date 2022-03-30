@@ -19,4 +19,4 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${WIRINGPI_INCLUDE_DIRS})
 target_link_libraries(vehicle_final ${OpenCV_LIBS} ${WIRINGPI_LIBRARIES})
 
-add_definitions(-L/home/pi/wiringPi-8d188fa/wiringPi -lwiringPi)
+add_definitions(-L/code/wiringPi/wiringPi -lwiringPi)

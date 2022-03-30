@@ -38,6 +38,8 @@
 		<Unit filename="lineTrack.hpp" />
 		<Unit filename="main.cpp" />
 		<Unit filename="main.hpp" />
+		<Unit filename="opencv_aee.cpp" />
+		<Unit filename="opencv_aee.hpp" />
 		<Unit filename="visualScan.cpp" />
 		<Unit filename="visualScan.hpp" />
 		<Extensions>

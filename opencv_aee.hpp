@@ -16,9 +16,6 @@ using namespace cv;
 using namespace cv::xfeatures2d;
 
 // Functions
-void setupCamera(int width, int height);       // Setup the camera for image capture
-void resizeCamera(int width, int height);      // Resize the camera frame
-Mat captureFrame(void);                         // Capture an image from the camera
 Mat readImage(const char* imageLoc);           // Read an image from a file
 
 Point templateMatch(Mat frame, Mat templ, int method, double threshold = 0);  // Locate an image inside another image and give the centre location

@@ -1,43 +1,5 @@
 #include "opencv_aee.hpp"
 
-// Global Variables
-VideoCapture cap(0);	// Variable to store the camera device
-int cameraFlag = 0;
-
-// Camera functions
-void setupCamera(int width, int height)
-{
-	// Open the camera device for image capture, set the dimensions of the image
-	if (!cap.isOpened())
-	{
-		std::cerr << "ERROR: Unable to open the camera" << std::endl;
-		errorTrap();
-	}
-	cap.set(CAP_PROP_FRAME_WIDTH, width);
-	cap.set(CAP_PROP_FRAME_HEIGHT, height);
-	cameraFlag = 1;
-}
-
-void resizeCamera(int width, int height)
-{
-    cap.set(CAP_PROP_FRAME_WIDTH, width);
-	cap.set(CAP_PROP_FRAME_HEIGHT, height);
-}
-
-Mat captureFrame(void)
-{
-    Mat frame;
-
-	cap >> frame;
-	if(!frame.data)
-	{
-		std::cout<< "ERROR: Unable to read camera image" << std::endl;
-		errorTrap();
-	}
-
-	return frame;
-}
-
 
 Point templateMatch(Mat frame, Mat templ, int method, double threshold)
 {
@@ -222,14 +184,6 @@ Mat readImage(const char* imageLoc)
 void errorTrap(void)
 {
     while(1);
-}
-
-void closeCV(void)
-{
-    // Clean up the open camera and windows
-    if(cameraFlag)
-        cap.release();
-	destroyAllWindows();
 }
 
 Mat transformPerspective(std::vector<Point> boundingContour, Mat frame, int x_size, int y_size)
