@@ -1,0 +1,3 @@
+/home/pengyuan/CLionProjects/visual_test/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/pengyuan/CLionProjects/visual_test/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/pengyuan/CLionProjects/visual_test/cmake-build-debug/CMakeFiles/visual_test.dir

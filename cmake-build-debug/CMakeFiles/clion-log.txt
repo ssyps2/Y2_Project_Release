@@ -1,0 +1,5 @@
+/home/pengyuan/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.6777.58/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/pengyuan/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/213.6777.58/bin/ninja/linux/ninja -G Ninja /home/pengyuan/CLionProjects/visual_test
+-- Found OpenCV: /usr (found version "4.2.0") found components: core highgui imgproc 
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/pengyuan/CLionProjects/visual_test/cmake-build-debug
