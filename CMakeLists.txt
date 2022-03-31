@@ -4,7 +4,7 @@ project(vehicle_final)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-add_executable(vehicle_final main.cpp devices.cpp lineTrack.cpp visualScan.cpp opencv_aee.cpp)
+add_executable(vehicle_final main.cpp devices.cpp lineTrack.cpp visualScan.cpp)
 
 #------ opencv related config ------#
 find_library(WIRINGPI_LIBRARIES NMAES wiringPi)
