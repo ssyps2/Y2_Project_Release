@@ -33,12 +33,12 @@ string hsv_window_name = "Object Detection";
 
 int main() {
     string image_path = "/home/pengyuan/Pictures/record.jpg";
-    string comparePath = "/home/pengyuan/Pictures/Templates/CountShape2.png";
+    string comparePath = "/home/pengyuan/Pictures/Templates/CountShape1.PNG";
 
-    int matching_frame_width = 320, matching_frame_height = 240;
+    int matching_frame_width = 480, matching_frame_height = 272;
 
     Mat imageMatch = imread(image_path);
-    cv::resize(imageMatch, imageMatch, cv::Size(matching_frame_width, matching_frame_height));
+//    cv::resize(imageMatch, imageMatch, cv::Size(matching_frame_width, matching_frame_height));
 
     Mat imageCompareInput, imageCompare;
     Mat imageHSV, imageMask, imageErode, imageDilate;
@@ -51,112 +51,151 @@ int main() {
     Vector <Vector<Point>> contours, contoursCompare;
     Point2f input_coordinate[4], output_coordinate[4];
 
-    //TrackBar_HSV_Detection(image_path);
+//    TrackBar_HSV_Detection(image_path);
     //TrackBar_HSV_Detection(comparePath);
 
     imageCompareInput = imread(comparePath);
     resize(imageCompareInput, imageCompare, Size(matching_frame_width, matching_frame_height));
 
-    kernelErode = getStructuringElement(MORPH_RECT, Size(8, 8));
+    kernelErode = getStructuringElement(MORPH_RECT, Size(11, 11));
     kernelDilate = getStructuringElement(MORPH_RECT, Size(6, 6));
-    kernelDilate2 = getStructuringElement(MORPH_RECT, Size(3, 3));
+    kernelDilate2 = getStructuringElement(MORPH_RECT, Size(7, 7));
 
     cvtColor(imageMatch, imageHSV, COLOR_BGR2HSV);
+//    imshow("HSV", imageHSV);
+//    imwrite("/home/pengyuan/Pictures/hsv.jpg",imageHSV);
     inRange(imageHSV, Scalar(157, 157, 114), Scalar(180, 255, 255), imageMask);
+//    imshow("mask", imageMask);
+//    imwrite("/home/pengyuan/Pictures/mask.jpg",imageMask);
 
     cvtColor(imageCompare, imgHSVCompare, COLOR_BGR2HSV);
     inRange(imgHSVCompare, Scalar(64, 0, 0), Scalar(180, 255, 255), imageMaskCompare);
 
     //erode-dilate algorithm
     dilate(imageMask, imageMask, kernelDilate);
-//    imshow("dilate", imageMask);
-//    waitKey(0);
     erode(imageMask, imageErode, kernelErode);
 //    imshow("erode", imageErode);
-//    waitKey(0);
+//    imwrite("/home/pengyuan/Pictures/erode.jpg",imageErode);
+
     dilate(imageErode, imageDilate, kernelDilate2);
-//    imshow("dilate2", imageDilate);
-//    waitKey(0);
+    imshow("processed", imageDilate);
+//    imwrite("/home/pengyuan/Pictures/processed.jpg",imageDilate);
 
     /* ------------------------------------------------------------------------------------------------- */
     findContours(imageDilate, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);
+//    drawContours(imageMatch, contours, -1, Scalar(0,255,0), 2);
+//    imshow("tree", imageMatch);
+//    imwrite("/home/pengyuan/Pictures/tree.jpg",imageMatch);
     int contourID = getMaxAreaContourId(contours);
     Vector<Point> boundingContour = contours[contourID];
 
     Vector<Point> approx;
-    approxPolyDP(boundingContour, approx, 5, true);
-    Point point1{0,0}, point2{0,0}, point3{0,0}, point4{0,0};
-    int point1_cnt = 0, point2_cnt = 0, point3_cnt = 0, point4_cnt = 0;
-    Point contourCentre = findContourCentre(boundingContour);
-//    circle(imageMatch, contourCentre, 4, Scalar(0,0,255),4);
-//    imshow("what", imageMatch);
-//    waitKey(0);
-    for (int i = 0; i<approx.size(); i++){
-        if(approx[i].x < contourCentre.x){
-            if(approx[i].y < contourCentre.y){
-                point1.x += approx[i].x;
-                point1.y += approx[i].y;
-                point1_cnt++;
-            }
-            else{
-                point4.x += approx[i].x;
-                point4.y += approx[i].y;
-                point4_cnt++;
-            }
-        }
-        else if (approx[i].x >= contourCentre.x){
-            if(approx[i].y < contourCentre.y){
-                point2.x += approx[i].x;
-                point2.y += approx[i].y;
-                point2_cnt++;
-            }
-            else{
-                point3.x += approx[i].x;
-                point3.y += approx[i].y;
-                point3_cnt++;
-            }
-        }
+    int tri_cnt = 0, rect_cnt = 0, cir_cnt = 0;
+    char tri_str[15], rect_str[15], cir_str[15];
+
+    for(int i= 0; i < contours.size(); i++)
+    {
+        if (i == contourID || contourArea(contours.at(i)) < 120 || contourArea(contours.at(i)) > 50000) continue;
+
+        approxPolyDP(contours[i], approx, 8, true);
+
+        if (approx.size() == 3) tri_cnt++;
+        else if (approx.size() == 4) rect_cnt++;
+        else if (approx.size() > 4) cir_cnt++;
+
+        std::cout << "Area of contour " << i << ": " << contourArea(contours.at(i)) << std::endl;
+        drawContours(imageMatch, Mat(approx), -1, Scalar(0,255,0), 6);
     }
 
-    point1.x /= point1_cnt; point1.y /= point1_cnt;
-    point2.x /= point2_cnt; point2.y /= point2_cnt;
-    point3.x /= point3_cnt; point3.y /= point3_cnt;
-    point4.x /= point4_cnt; point4.y /= point4_cnt;
+    std::cout << tri_cnt << "," << rect_cnt << "," << cir_cnt << std::endl;
 
-    Vector<Point> inputCorner = {point1, point2, point3, point4};
+//    drawContours(imageMatch, Mat(approx_cir), -1, Scalar(0,255,0), 8);
+    sprintf(tri_str, "Triangle:   %d", tri_cnt);
+    sprintf(rect_str, "Rectangle: %d", rect_cnt);
+    sprintf(cir_str, "Circle:     %d", cir_cnt);
+    putText(imageMatch, tri_str, Point(10, 60), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(0, 255, 255), 2);
+    putText(imageMatch, rect_str, Point(10, 90), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(0, 255, 255), 2);
+    putText(imageMatch, cir_str, Point(10, 120), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(0, 255, 255), 2);
+    putText(imageMatch, "Epsilon:   8", Point(10, 150), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(0, 255, 255), 2);
+    imshow("approx", imageMatch);
+    imwrite("/home/pengyuan/Pictures/cnt_shape_120_e8.jpg",imageMatch);
+//    imshow("before", imageMatch);
+//    imwrite("/home/pengyuan/Pictures/before.jpg",imageMatch);
 
-    drawContours(imageMatch, Mat(inputCorner), -1, Scalar(0,255,0), 8);
-//    imshow("what", imageMatch);
-//    waitKey(0);
-
-    findContours(imageMaskCompare, contoursCompare, RETR_TREE, CHAIN_APPROX_SIMPLE);
-    int contourCompareID = getMaxAreaContourId(contoursCompare);
-    Vector<Point> boundingContourCompare = contoursCompare[contourCompareID];
-
-    Vector<Point> approxCompare;
-    approxPolyDP(boundingContourCompare, approxCompare, 5, true);
-    drawContours(imageCompare, Mat(approxCompare), -1, Scalar(0,255,0), 8);
-
-    for (int j = 0; j < 4; j++){
-        output_coordinate[j] = approxCompare[j];
-    }
+//    Point point1{0,0}, point2{0,0}, point3{0,0}, point4{0,0};
+//    int point1_cnt = 0, point2_cnt = 0, point3_cnt = 0, point4_cnt = 0;
+//    Point contourCentre = findContourCentre(boundingContour);
+////    circle(imageMatch, contourCentre, 6, Scalar(0,255,255),6);
+////    imshow("circle", imageMatch);
+////    imwrite("/home/pengyuan/Pictures/circle.jpg",imageMatch);
 //
-//    transformMatrix = getPerspectiveTransform(input_coordinate, output_coordinate);
-//    warpPerspective(imageDilate, transformImage, transformMatrix, Size(imageDilate.cols,imageDilate.rows));
-
-    transformImage = transformPerspective(inputCorner, imageDilate, matching_frame_width, matching_frame_height);
-
-    bitwise_xor(transformImage, imageMaskCompare, imageXOR);
-
-    compare_output = 100.0f * (1 - (float)countNonZero(imageXOR) / (float)(imageXOR.cols * imageXOR.rows));
+//    for (int i = 0; i<approx.size(); i++){
+//        if(approx[i].x < contourCentre.x){
+//            if(approx[i].y < contourCentre.y){
+//                point1.x += approx[i].x;
+//                point1.y += approx[i].y;
+//                point1_cnt++;
+//            }
+//            else{
+//                point4.x += approx[i].x;
+//                point4.y += approx[i].y;
+//                point4_cnt++;
+//            }
+//        }
+//        else if (approx[i].x >= contourCentre.x){
+//            if(approx[i].y < contourCentre.y){
+//                point2.x += approx[i].x;
+//                point2.y += approx[i].y;
+//                point2_cnt++;
+//            }
+//            else{
+//                point3.x += approx[i].x;
+//                point3.y += approx[i].y;
+//                point3_cnt++;
+//            }
+//        }
+//    }
+//
+//    point1.x /= point1_cnt; point1.y /= point1_cnt;
+//    point2.x /= point2_cnt; point2.y /= point2_cnt;
+//    point3.x /= point3_cnt; point3.y /= point3_cnt;
+//    point4.x /= point4_cnt; point4.y /= point4_cnt;
+//
+//    Vector<Point> inputCorner = {point1, point2, point3, point4};
+//
+//    drawContours(imageMatch, Mat(inputCorner), -1, Scalar(0,255,0), 8);
+//
+//    findContours(imageMaskCompare, contoursCompare, RETR_TREE, CHAIN_APPROX_SIMPLE);
+//    int contourCompareID = getMaxAreaContourId(contoursCompare);
+//    Vector<Point> boundingContourCompare = contoursCompare[contourCompareID];
+//
+//    Vector<Point> approxCompare;
+//    approxPolyDP(boundingContourCompare, approxCompare, 5, true);
+//    drawContours(imageCompare, Mat(approxCompare), -1, Scalar(0,255,0), 8);
+//
+//    for (int j = 0; j < 4; j++){
+//        output_coordinate[j] = approxCompare[j];
+//    }
+//
+////    transformMatrix = getPerspectiveTransform(input_coordinate, output_coordinate);
+////    warpPerspective(imageDilate, transformImage, transformMatrix, Size(imageDilate.cols,imageDilate.rows));
+//
+//    transformImage = transformPerspective(inputCorner, imageDilate, matching_frame_width, matching_frame_height);
+//
+//    bitwise_xor(transformImage, imageMaskCompare, imageXOR);
+//
+//    compare_output = 100.0f * (1 - (float)countNonZero(imageXOR) / (float)(imageXOR.cols * imageXOR.rows));
 
 //    std::cout << compare_output << std::endl;
 
-    imshow("origin", imageMatch);
-//    imshow("mask", imageMask);
-    imshow("maskCompare", imageMaskCompare);
-    imshow("transform", transformImage);
-    imshow("XOR", imageXOR);
+//    imshow("after", imageMatch);
+//    imwrite("/home/pengyuan/Pictures/after.jpg",imageMatch);
+//    imshow("maskCompare", imageMaskCompare);
+//    imwrite("/home/pengyuan/Pictures/compare.jpg",imageMaskCompare);
+//    imshow("transform", transformImage);
+//    imwrite("/home/pengyuan/Pictures/transform.jpg",transformImage);
+//    imshow("XOR", imageXOR);
+//    imwrite("/home/pengyuan/Pictures/xor.jpg",imageXOR);
     waitKey(0);
 }
 
@@ -284,7 +323,7 @@ Mat transformPerspective(std::vector<Point> boundingContour, Mat frame, int x_si
     boundingCorners[3].y = boundingContour[point4].y-dia_size;
 
     Mat transformMatrix = cv::getPerspectiveTransform(boundingCorners, symbolCorners); // Calculate the required transform operation
-    Mat transformedSymbol(240,320,CV_8UC1,Scalar(0));
+    Mat transformedSymbol(272,480,CV_8UC1,Scalar(0));
     cv::warpPerspective(frame, transformedSymbol, transformMatrix, cv::Size(symbol.cols,symbol.rows));  // Perform the transformation
 
     return transformedSymbol;
