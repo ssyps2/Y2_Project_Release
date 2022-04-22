@@ -3,7 +3,6 @@ extern "C"
 {
 #include <stdlib.h>
 #include "imgproc.h"
-#include "wiringSerial.h"
 #include "wiringPi.h"
 }
 #endif
@@ -11,6 +10,7 @@ extern "C"
 #include <cmath>
 #include "lineTrack.hpp"
 #include "visualScan.hpp"
+#include "devices.hpp"
 
 /* Prototype of Static Functions */
 static void PIDInit(PIDTypeDef *pid);
@@ -85,27 +85,22 @@ void trackLine(vehicleControl_t *robot){
     //serialPrintf(robot->serial, "#Bafrfr %03d %03d %03d %03d", rightMotorSpeed, leftMotorSpeed, leftMotorSpeed, rightMotorSpeed);
     //serialPrintf(robot->serial, "#ha");
 
-    if (robot->modeFlag == TRACK){
+    if (robot->modeFlag == TRACK || robot->modeFlag == MATCHDONE){
         serialPrintf(robot->serial, "#Ba%c%c%c%c %03d %03d %03d %03d", Motor1Direction, Motor2Direction, Motor3Direction, Motor4Direction,
                                                                    rightMotorSpeed, leftMotorSpeed, leftMotorSpeed, rightMotorSpeed);
-        //std::cout << "OK" << std::endl;
+        std::cout << "OK" << std::endl;
     }
     else if (robot->modeFlag == DETECTED){
-        //stop the vehicle
-        //serialPrintf(robot->serial, "#ha");
+        serialPrintf(robot->serial, "#ha");
         //raise the camera
-
-    }
-    else if (robot->modeFlag == MATCH){
-        //
     }
 }
 
 static void PIDInit(PIDTypeDef *pid){
     //initialize PID parameters
-    pid->kp = 3.0;
+    pid->kp = 4;  //3.2
     pid->ki = 0;
-    pid->kd = 0.3;
+    pid->kd = 0.7;  //0.3
     pid->maxIOut = 10;
     pid->maxOut = 75;
 

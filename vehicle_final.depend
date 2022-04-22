@@ -1,5 +1,6 @@
 # depslib dependency file v1.0
-1648616577 source:/home/pi/opencv_samples/vehicle_final/main.cpp
+1648804554 source:/home/pi/opencv_samples/vehicle_final/main.cpp
+	"lcd.h"
 	"main.hpp"
 	"visualScan.hpp"
 	"lineTrack.hpp"
@@ -739,23 +740,26 @@
 	<vector>
 	"opencv2/imgproc.hpp"
 
-1648608311 source:/home/pi/opencv_samples/vehicle_final/lineTrack.cpp
+1648803328 source:/home/pi/opencv_samples/vehicle_final/lineTrack.cpp
 	<stdlib.h>
 	"imgproc.h"
-	"wiringSerial.h"
 	"wiringPi.h"
 	<cmath>
 	"lineTrack.hpp"
 	"visualScan.hpp"
+	"devices.hpp"
 
 1551518925 /usr/local/include/wiringSerial.h
 
 1551518925 /usr/local/include/wiringPi.h
 
-1648448501 /home/pi/opencv_samples/vehicle_final/lineTrack.hpp
+1648755499 /home/pi/opencv_samples/vehicle_final/lineTrack.hpp
 	"main.hpp"
 
-1648611094 /home/pi/opencv_samples/vehicle_final/main.hpp
+1648801338 /home/pi/opencv_samples/vehicle_final/main.hpp
+	"sys/time.h"
+	"wiringPi.h"
+	"wiringSerial.h"
 	<iostream>
 	<opencv2/opencv.hpp>
 	<opencv2/imgproc.hpp>
@@ -763,21 +767,21 @@
 	<opencv2/videoio.hpp>
 	<opencv2/core.hpp>
 
-1648447796 /home/pi/opencv_samples/vehicle_final/visualScan.hpp
+1648757926 /home/pi/opencv_samples/vehicle_final/visualScan.hpp
 	"main.hpp"
 
-1648612666 source:/home/pi/opencv_samples/vehicle_final/visualScan.cpp
+1648804145 source:/home/pi/opencv_samples/vehicle_final/visualScan.cpp
 	"visualScan.hpp"
 
-1648198781 source:/home/pi/opencv_samples/vehicle_final/devices.cpp
+1648802987 source:/home/pi/opencv_samples/vehicle_final/devices.cpp
+	"stdlib.h"
 	"lcd.h"
-	"wiringPi.h"
-	"sys/time.h"
+	"softPwm.h"
 	"devices.hpp"
 
 1551518927 /usr/local/include/lcd.h
 
-1648095605 /home/pi/opencv_samples/vehicle_final/devices.hpp
+1648791333 /home/pi/opencv_samples/vehicle_final/devices.hpp
 	"main.hpp"
 
 1648569555 /home/pi/opencv_samples/vehicle_final/opencv_aee.hpp
@@ -792,4 +796,52 @@
 
 1648569452 source:/home/pi/opencv_samples/vehicle_final/opencv_aee.cpp
 	"opencv_aee.hpp"
+
+1648787207 source:/home/pi/vehicle_final/lineTrack.cpp
+	<stdlib.h>
+	"imgproc.h"
+	"wiringSerial.h"
+	"wiringPi.h"
+	<cmath>
+	"lineTrack.hpp"
+	"visualScan.hpp"
+	"devices.hpp"
+
+1648755499 /home/pi/vehicle_final/lineTrack.hpp
+	"main.hpp"
+
+1648786892 /home/pi/vehicle_final/main.hpp
+	"sys/time.h"
+	<iostream>
+	<opencv2/opencv.hpp>
+	<opencv2/imgproc.hpp>
+	<opencv2/highgui.hpp>
+	<opencv2/videoio.hpp>
+	<opencv2/core.hpp>
+
+1648757926 /home/pi/vehicle_final/visualScan.hpp
+	"main.hpp"
+
+1648755310 /home/pi/vehicle_final/devices.hpp
+	"main.hpp"
+
+1648790072 source:/home/pi/vehicle_final/main.cpp
+	"lcd.h"
+	"main.hpp"
+	"visualScan.hpp"
+	"lineTrack.hpp"
+	"devices.hpp"
+	<thread>
+
+1648789920 source:/home/pi/vehicle_final/visualScan.cpp
+	"visualScan.hpp"
+
+1648788409 source:/home/pi/vehicle_final/devices.cpp
+	"stdlib.h"
+	"lcd.h"
+	"wiringPi.h"
+	"softPwm.h"
+	"devices.hpp"
+
+1551518925 /usr/local/include/softPwm.h
 

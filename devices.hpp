@@ -16,15 +16,23 @@
 #define LCD_D7 	 25
 
 /* Servo Motor related Define */
+#define SERVO_PIN 6
+
+/* LED related Define */
+#define LED_RED   13
+#define LED_BLUE  19
 
 
 /* Functions for Users */
 void deviceInit(vehicleControl_t *robot);
 
-float distanceDetect();
+float distanceDetect(vehicleControl_t *robot);
 
-void lcdDisplay(vehicleControl_t *robot);
+void servoControl(int cmdAngle);
 
-void servoControl(vehicleControl_t *robot);
+
+void playAudio(vehicleControl_t *robot);
+
+void alarmLED(vehicleControl_t *robot);
 
 #endif

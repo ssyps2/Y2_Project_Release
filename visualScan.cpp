@@ -12,29 +12,17 @@ static void on_high_V_thresh_trackbar(int, void *);
 Mat transformPerspective(std::vector<Point> boundingContour, Mat frame, int x_size, int y_size);
 Point findContourCentre(std::vector<cv::Point> contour);
 int getMaxAreaContourId(Vector<Vector<cv::Point>> contours);
-static void resizeCamera(vehicleControl_t *robot, int width, int height);
-static void modeCheck(vehicleControl_t *robot);
 static void RGBCallback(int event, int x, int y, int, void *param);
 static void HSVCallback(int event, int x, int y, int, void *param);
+static int shortcutTrack(Mat inputImage);
 
 extern vehicleControl_t robot;
 
-const int matching_frame_width = 320, matching_frame_height = 240;
-const int tracking_frame_width = 480, tracking_frame_height = 272;
-string comparePath = "/home/pi/Pictures/Template/CountShape2.png";
+Mat imageTrack;
 
-Mat imageMatch, imageTrack;
-Mat imageCompareInput, imageCompare;
-Mat imageHSV, imageMask, imageErode, imageDilate;
-Mat imgHSVCompare, imageMaskCompare;
-Mat transformMatrix, transformImage, imageXOR;
+const int sample_height = tracking_frame_height * 0.7;
 
-float compare_output;
-
-Point2f output_coordinate[4];
-
-Mat gray_image, pinkChannel, pinkMask;
-int last_tx;
+int tx, ty, last_tx;
 
 
 /* Global Variables used for HSV Detection */
@@ -55,137 +43,105 @@ void webcamInit(vehicleControl_t *robot){
 		exit(-2);
 	}
 
-    resizeCamera(robot, tracking_frame_width, tracking_frame_height);
-    //resizeCamera(robot, matching_frame_width, matching_frame_height);
+    resizeCamera(tracking_frame_width, tracking_frame_height);
+    //resizeCamera(matching_frame_width, matching_frame_height);
 
     robot->modeFlag = TRACK;
+
+    std::cout << "Webcam Init Success" << std::endl;
 }
 
 int midPointCapture(vehicleControl_t *robot){
+    Mat hsvImage, binaryImage, pinkChannel, pinkMask, colorChannel;
+
     float pinkRatio;
 
-    int tx, ty;     //coordinate information
-    char location[10];
-
-    const int sample_height = tracking_frame_height * 0.7;  //sampling height of the image
-    int sample_win[3]; //horizontal sampling windows, 0: previous, 1: now
+    int sample_win; //horizontal sampling windows, 0: previous, 1: now
     int sample_sum = 0, sample_cnt = 0;
-    int edge_first, edge_last;  //edge position
     int mid_point = 0, width = 0;  //middle position and width of the black line
 
-    uchar scanMode = 1;
+    int colorWidth = 0;
+    robot->colorMode = 0;    //0:no color, 1:yellow, 2:red, 3:blue, 4:green
 
     //process each frame of the video
     robot->webcam.read(imageTrack);     //read the image of one frame
 
-    resize(imageTrack, gray_image, Size(tracking_frame_width, tracking_frame_height));
+    resize(imageTrack, hsvImage, Size(tracking_frame_width, tracking_frame_height));
+    resize(imageTrack, binaryImage, Size(tracking_frame_width, tracking_frame_height));
     resize(imageTrack, pinkChannel, Size(tracking_frame_width, tracking_frame_height));
 
     //filtering the original image
-    cvtColor(imageTrack, gray_image, COLOR_BGR2HSV);
-    inRange(gray_image, Scalar(0, 0, 0), Scalar(179, 255, 70), gray_image);
-    if (scanMode == 0){
-        threshold(gray_image, gray_image, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
-    }
+    cvtColor(imageTrack, hsvImage, COLOR_BGR2HSV);
+    inRange(hsvImage, Scalar(0, 0, 0), Scalar(179, 255, 70), binaryImage);
 
     cvtColor(imageTrack, pinkChannel, COLOR_BGR2HSV);
-    inRange(pinkChannel, Scalar(143, 61, 195), Scalar(156, 255, 255), pinkMask);
+    inRange(pinkChannel, Scalar(143, 132, 0), Scalar(180, 255, 255), pinkMask);
 
     pinkRatio = 100.0f * (float) countNonZero(pinkMask) / (float) (tracking_frame_width * tracking_frame_height);
 
-    //std::cout << pinkRatio << std::endl;
+    std::cout << "pink ratio: " << pinkRatio << std::endl;
 
-    /*if (pinkRatio >= 8 && pinkRatio <= 25){
+//    if (robot->lastModeFlag == MATCHDONE && robot->modeFlag == TRACK){
+//        taskTimer(3);
+//    }
+
+    if (pinkRatio >= 2 && pinkRatio <= 20){
+        //delay(900);
         robot->modeFlag = DETECTED;
+        std::cout << "detected" << std::endl;
+        serialPrintf(robot->serial, "#Bafrfr 020 020 020 020");
+        delay(300);
     }
     else {
-        robot->modeFlag = TRACK;
-    }*/
+        std::cout << "not detected" << std::endl;
+    }
 
-    if (scanMode == 0){
-        //initialize the sampling windows
-        sample_win[1] = gray_image.at<uchar>(Point(0, sample_height));
+    if (robot->colorMode == 1) inRange(hsvImage, Scalar(17, 42, 46), Scalar(46, 255, 255), colorChannel);  //yellow
+    if (robot->colorMode == 2) inRange(hsvImage, Scalar(117, 42, 43), Scalar(180, 255, 255), colorChannel);  //red
+    if (robot->colorMode == 3) inRange(hsvImage, Scalar(90, 63, 46), Scalar(125, 255, 255), colorChannel);  //blue
+    if (robot->colorMode == 4) inRange(hsvImage, Scalar(40, 168, 50), Scalar(85, 255, 255), colorChannel); //green
 
-        //reset the edge position of the frame to be scanned
-        edge_first = edge_last = 0;
+    if (robot->colorMode != 0) colorWidth = shortcutTrack(colorChannel);
 
-        //find the center position of the tracking line for one frame
-        for (int pos = 0; pos < tracking_frame_width; pos++) {
-            sample_win[0] = sample_win[1];
-            sample_win[1] = gray_image.at<uchar>(Point(pos, sample_height));    //update the sampling window
-
-            if (sample_win[1] - sample_win[0] < -240) {
-                edge_first = pos;
-            } else if (sample_win[1] - sample_win[0] > 240) {
-                edge_last = pos;
-                if (edge_last - edge_first > 15) {
-                    break;
-                }
-            } else if (pos == tracking_frame_width-1 && gray_image.at<uchar>(Point(tracking_frame_width-1, sample_height)) == 0) {
-                edge_last = tracking_frame_width-1;
-            } else if (pos == 0 && gray_image.at<uchar>(Point(0, sample_height)) == 0) {
-                edge_first = 0;
-            }
+    for (int pos = 0; pos < tracking_frame_width; pos++) {
+        if (colorWidth >= COLORWIDTH){
+            sample_win = colorChannel.at<uchar>(Point(pos, sample_height));
+        }
+        else {
+            sample_win = binaryImage.at<uchar>(Point(pos, sample_height));
         }
 
-        //mid-point location and line width calculation
-        mid_point = (edge_first + edge_last) / 2;
-        width = edge_last - edge_first;
-    }
-    else if (scanMode == 1){
-        for (int pos = 0; pos < tracking_frame_width; pos++) {
-            sample_win[2] = gray_image.at<uchar>(Point(pos, sample_height));
-            if (sample_win[2] > 240){
-                sample_sum += pos;
-                sample_cnt++;
-            }
+        if (sample_win > 240){
+            sample_sum += pos;
+            sample_cnt++;
+        }
 
-            if (sample_cnt == 0){
-                mid_point = 0;
-                width = 0;
-            }
-            else {
-                mid_point = (int)(sample_sum / sample_cnt);
-                width = sample_cnt;
-            }
+        if (sample_cnt == 0){
+            mid_point = 0;
+            width = 0;
+        }
+        else {
+            mid_point = (int)(sample_sum / sample_cnt);
+            width = sample_cnt;
         }
     }
 
     //std::cout << "width: " << width << std::endl;
 
-    if (scanMode == 0){
-        if (width >= 60 && gray_image.at<uchar>(Point(tracking_frame_width-1, sample_height)) == 0){
-            last_tx = tx;
-            tx = edge_last;
-        }
-        else if (width >= 60 && gray_image.at<uchar>(Point(0, sample_height)) == 0){
-            last_tx = tx;
-            tx = edge_first;
-        }
-        else if (width > 15 && width < 60){
-            last_tx = tx;
-            tx = mid_point;
-        }
-        else if (width == 0){
-            tx = last_tx;
-        }
+    if (width >= 60 && binaryImage.at<uchar>(Point(tracking_frame_width-1, sample_height)) > 240){
+        last_tx = tx;
+        tx = (int)(mid_point + width/2);
     }
-    else if (scanMode == 1){
-        if (width >= 60 && gray_image.at<uchar>(Point(tracking_frame_width-1, sample_height)) > 240){
-            last_tx = tx;
-            tx = (int)(mid_point + width/2);
-        }
-        else if (width >= 60 && gray_image.at<uchar>(Point(0, sample_height)) > 240){
-            last_tx = tx;
-            tx = (int)(mid_point - width/2);
-        }
-        else if (width > 15 && width < 60){
-            last_tx = tx;
-            tx = mid_point;
-        }
-        else if (width == 0){
-            tx = last_tx;
-        }
+    else if (width >= 60 && binaryImage.at<uchar>(Point(0, sample_height)) > 240){
+        last_tx = tx;
+        tx = (int)(mid_point - width/2);
+    }
+    else if (width > 15 && width < 60){
+        last_tx = tx;
+        tx = mid_point;
+    }
+    else if (width == 0){
+        tx = last_tx;
     }
 
     ty = sample_height;
@@ -195,21 +151,64 @@ int midPointCapture(vehicleControl_t *robot){
 
     //modeCheck(robot);
 
-    setMouseCallback("Processed Video", RGBCallback, &imageTrack);
+    //setMouseCallback("Processed Video", RGBCallback, &imageTrack);
 
-    //display the processed video
+    std::cout << "Processed" << std::endl;
     //imshow("Processed Video", imageTrack);
-    //imshow("Binary", gray_image);
+    //imshow("Binary", hsvImage);
     //imshow("pink channel", pinkMask);
     //waitKey(1);
 
     return tx;
 }
 
-float visualMatch(vehicleControl_t *robot) {
+static int shortcutTrack(Mat inputImage){
+    int sample_win[2];
+    int edge_first = 0, edge_last = 0;  //edge position
+    int mid_point = 0, width = 0;
+
+    threshold(inputImage, inputImage, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
+
+    //initialize the sampling windows
+    sample_win[1] = inputImage.at<uchar>(Point(0, sample_height));
+
+    //find the center position of the tracking line for one frame
+    for (int pos = 0; pos < tracking_frame_width; pos++) {
+        sample_win[0] = sample_win[1];
+        sample_win[1] = inputImage.at<uchar>(Point(pos, sample_height));    //update the sampling window
+
+        if (sample_win[1] - sample_win[0] < -240) {
+            edge_first = pos;
+        } else if (sample_win[1] - sample_win[0] > 240) {
+            edge_last = pos;
+            if (edge_last - edge_first > 15) {
+                break;
+            }
+        } else if (pos == tracking_frame_width-1 && inputImage.at<uchar>(Point(tracking_frame_width-1, sample_height)) == 0) {
+            edge_last = tracking_frame_width-1;
+        } else if (pos == 0 && inputImage.at<uchar>(Point(0, sample_height)) == 0) {
+            edge_first = 0;
+        }
+    }
+
+    mid_point = (edge_first + edge_last) / 2;
+    width = edge_last - edge_first;
+
+    return width;
+}
+
+float visualMatch(vehicleControl_t *robot, const string comparePath){
+    Mat imageMatch, imageCompare;
+    Mat imageHSV, imageMask, imageErode, imageDilate;
+    Mat imgHSVCompare, imageMaskCompare;
+    Mat transformMatrix, transformImage, imageXOR;
+
+    Mat yellowChannel, redChannel, blueChannel, greenChannel;
+    float yellowRatio, redRatio, blueRatio, greenRatio;
+
     robot->webcam.read(imageMatch);
 
-    imageCompareInput = imread(comparePath);
+    Mat imageCompareInput = imread(comparePath);
     resize(imageCompareInput, imageCompare, Size(matching_frame_width, matching_frame_height));
 
     /*char keyRecord = (char) waitKey(1);
@@ -220,22 +219,41 @@ float visualMatch(vehicleControl_t *robot) {
 
     //trackBarHsvDetection(robot);
 
-    Mat kernelErode = getStructuringElement(MORPH_RECT, Size(8, 8));
-    Mat kernelDilate = getStructuringElement(MORPH_RECT, Size(6, 6));
-    Mat kernelDilate2 = getStructuringElement(MORPH_RECT, Size(3, 3));
+    Mat kernelErode = getStructuringElement(MORPH_RECT, Size(3, 3));
+    Mat kernelDilate = getStructuringElement(MORPH_RECT, Size(5, 5));
+    Mat kernelDilate2 = getStructuringElement(MORPH_RECT, Size(4, 4));
 
     cvtColor(imageMatch, imageHSV, COLOR_BGR2HSV);
-    inRange(imageHSV, Scalar(157, 157, 114), Scalar(180, 255, 255), imageMask);
+    inRange(imageHSV, Scalar(157, 116, 102), Scalar(180, 255, 255), imageMask);
 
     cvtColor(imageCompare, imgHSVCompare, COLOR_BGR2HSV);
     inRange(imgHSVCompare, Scalar(64, 0, 0), Scalar(180, 255, 255), imageMaskCompare);
+
+    Vector <Vector<Point>> colorContours;
+
+    inRange(imageHSV, Scalar(17, 42, 46), Scalar(46, 255, 255), yellowChannel);  //yellow
+    inRange(imageHSV, Scalar(117, 42, 43), Scalar(180, 255, 255), redChannel);  //red
+    inRange(imageHSV, Scalar(90, 63, 46), Scalar(125, 255, 255), blueChannel);  //blue
+    inRange(imageHSV, Scalar(40, 168, 50), Scalar(85, 255, 255), greenChannel); //green
+
+    yellowRatio = 100.0f * (float) countNonZero(yellowRatio) / (float) (matching_frame_width * matching_frame_height);
+    redRatio = 100.0f * (float) countNonZero(redRatio) / (float) (matching_frame_width * matching_frame_height);
+    blueRatio = 100.0f * (float) countNonZero(blueRatio) / (float) (matching_frame_width * matching_frame_height);
+    greenRatio = 100.0f * (float) countNonZero(greenRatio) / (float) (matching_frame_width * matching_frame_height);
+
+
+
+//    if (yellowRatio > )
 
     //erode-dilate algorithm
     dilate(imageMask, imageMask, kernelDilate);
     erode(imageMask, imageErode, kernelErode);
     dilate(imageErode, imageDilate, kernelDilate2);
 
-    findContours(imageDilate, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);
+    Vector <Vector<Point>> contours, contoursCompare;
+    Vector <Vec4i> hierarchy;
+
+    findContours(imageDilate, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
     int contourID = getMaxAreaContourId(contours);
     Vector<Point> boundingContour = contours[contourID];
 
@@ -244,9 +262,7 @@ float visualMatch(vehicleControl_t *robot) {
     Point point1{0,0}, point2{0,0}, point3{0,0}, point4{0,0};
     int point1_cnt = 0, point2_cnt = 0, point3_cnt = 0, point4_cnt = 0;
     Point contourCentre = findContourCentre(boundingContour);
-//    circle(imageMatch, contourCentre, 4, Scalar(0,0,255),4);
-//    imshow("what", imageMatch);
-//    waitKey(0);
+
     for (int i = 0; i<approx.size(); i++){
         if(approx[i].x < contourCentre.x){
             if(approx[i].y < contourCentre.y){
@@ -274,16 +290,23 @@ float visualMatch(vehicleControl_t *robot) {
         }
     }
 
+    if (point1_cnt == 0 || point2_cnt == 0 || point3_cnt == 0 || point4_cnt == 0){
+        throw std::exception();
+    }
     point1.x /= point1_cnt; point1.y /= point1_cnt;
     point2.x /= point2_cnt; point2.y /= point2_cnt;
     point3.x /= point3_cnt; point3.y /= point3_cnt;
     point4.x /= point4_cnt; point4.y /= point4_cnt;
 
+    /*std::cout << "P1 " << point1.x << "," << point1.y << std::endl;
+    std::cout << "P2 " << point2.x << "," << point2.y << std::endl;
+    std::cout << "P3 " << point3.x << "," << point3.y << std::endl;
+    std::cout << "P4 " << point4.x << "," << point4.y << std::endl;*/
+
     Vector<Point> inputCorner = {point1, point2, point3, point4};
 
     drawContours(imageMatch, Mat(inputCorner), -1, Scalar(0,255,0), 8);
-//    imshow("what", imageMatch);
-//    waitKey(0);
+//    drawContours(imageMatch, Mat(boundingContour), -1, Scalar(0,255,0), 3);
 
     findContours(imageMaskCompare, contoursCompare, RETR_TREE, CHAIN_APPROX_SIMPLE);
     int contourCompareID = getMaxAreaContourId(contoursCompare);
@@ -293,31 +316,29 @@ float visualMatch(vehicleControl_t *robot) {
     approxPolyDP(boundingContourCompare, approxCompare, 5, true);
     drawContours(imageCompare, Mat(approxCompare), -1, Scalar(0,255,0), 8);
 
+    Point2f input_coordinate[4], output_coordinate[4];
+
     for (int j = 0; j < 4; j++){
         output_coordinate[j] = approxCompare[j];
     }
-//
+
 //    transformMatrix = getPerspectiveTransform(input_coordinate, output_coordinate);
 //    warpPerspective(imageDilate, transformImage, transformMatrix, Size(imageDilate.cols,imageDilate.rows));
 
     transformImage = transformPerspective(inputCorner, imageDilate, matching_frame_width, matching_frame_height);
 
-    //XOR
     bitwise_xor(transformImage, imageMaskCompare, imageXOR);
 
-    compare_output = 100.0f * (1 - (float) countNonZero(imageXOR) / (float) (imageXOR.cols * imageXOR.rows));
-
-    //modeCheck(robot);
+    float compare_output = 100.0f * (1 - (float) countNonZero(imageXOR) / (float) (imageXOR.cols * imageXOR.rows));
 
     //setMouseCallback("origin", RGBCallback, &imageMatch);
     //setMouseCallback("origin", HSVCallback, &imageHSV);
 
-    //std::cout << compare_output << std::endl;
+    std::cout << "compare output: " << compare_output << std::endl;
 
-    //imshow("erode", imageErode);
-    imshow("origin", imageMatch);
-    //imshow("mask", imageMask);
-    //imshow("transform", transformImage);
+    //imshow("origin", imageMatch);
+    imshow("mask", imageMask);
+    imshow("transform", transformImage);
     //imshow("compareMask", imageMaskCompare);
     //imshow("XOR", imageXOR);
 
@@ -495,15 +516,6 @@ void TrackBar_HSV_Detection(const string& file_path){
     }
 }
 
-static void modeCheck(vehicleControl_t *robot){
-    if(robot->lastModeFlag == DETECTED && robot->modeFlag == MATCH){
-        resizeCamera(robot, matching_frame_width, matching_frame_height);
-    }
-    else if (robot->lastModeFlag == MATCHDONE && robot->modeFlag == TRACK){
-        resizeCamera(robot, tracking_frame_width, tracking_frame_height);
-    }
-}
-
 static void RGBCallback(int event, int x, int y, int, void *param){
     Mat *imgRGB = (Mat *)param;
     int areaDownX, areaDownY, areaUpX, areaUpY;
@@ -560,9 +572,9 @@ static void HSVCallback(int event, int x, int y, int, void *param){
     }
 }
 
-static void resizeCamera(vehicleControl_t *robot, int width, int height){
-    robot->webcam.set(CAP_PROP_FRAME_WIDTH, width);
-	robot->webcam.set(CAP_PROP_FRAME_HEIGHT, height);
+void resizeCamera(int width, int height){
+    robot.webcam.set(CAP_PROP_FRAME_WIDTH, width);
+	robot.webcam.set(CAP_PROP_FRAME_HEIGHT, height);
 }
 
 static void trackBarHsvDetection(vehicleControl_t *robot){
